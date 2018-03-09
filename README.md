@@ -25,18 +25,16 @@ SafeMath -> ERC721 -> PhotoBase -> PhotoCore
 
 #### Photocoin Structure
 
-Each tokenized photograph has 2 params to specify itself.
+Each tokenized photograph has 5 params to specify itself.
 
-    Pet {
-    kind, // the type of pets
-    genes, // the unique genetic ID to specify visibility of pet
-    birthTime // the time creating pet
+    struct Photo {
+        string name;//Name of photograph
+        string photographer;//Name of photographer
+        bytes32 photoHash; //Hash of photo
+        uint256 isenNumber;// The unique ISEN number
+        uint64 uploadTime;// The timestamp from the block when this came into existence
     }
 
-    e.g. 
-    kind - string variable("turtle")
-    genes - string variable ("??????") A proprietary algorithm creates this string
-    birthtime - Unix timestamp (1519928045) of when the pet is born
 
 ### Functions and Variable
 
@@ -53,10 +51,10 @@ Each tokenized photograph has 2 params to specify itself.
    * Functions
    
     Public Functions
-      PetCore.sol
-        createPet
-      PetBase.sol
-        getPet
+      PhotoCore.sol
+        createPhoto
+      PhotoBase.sol
+        getPhoto
         transferFrom
       ERC721.sol
         transferFrom
@@ -78,49 +76,49 @@ Each tokenized photograph has 2 params to specify itself.
     truffle develop
     migrate
 ```    
-  * Create Pet
+  * Upload Photo
 ```
-    createPet("Aardvark","28008","0x0d7EFfEFdB084DfEB1621348c8C70cc4e871Eba4");
+    uploadPhoto(0x38d09,"Aardvarks","Dave Tera",10);
 ```
-  * Get Pet Info using its ID
+  * Get Photo Info using its ID
 ```    
-    getPet(1);
+    getPhoto(1);
 ```
-  * Get the number of Pets owned by a specific address.
+  * Get the number of Photos owned by a specific address.
 ```
     balanceOf("0x0d7EFfEFdB084DfEB1621348c8C70cc4e871Eba4");
 ```
-  * Get the total number of Pets currently in existence.
+  * Get the total number of Photographs uploaded.
 ```
     totalSupply();
 ```
-  * Transfers a Pet to another address
+  * Transfers the ownership of a photo from one address to another address
 ```
     transferFrom("0x0d7EFfEFdB084DfEB1621348c8C70cc4e871Eba4", "0x0d7EFfEFdB084DfEB1621348c8C70cc4e871Eba5",1); 
     //Assuming you own the token and are either the first (_from) address or approved to do so.
 ```
-  * Get TokenID of pets owned by owner
+  * Get TokenID of photos owned by owner
 ```    
     tokensOf("0x0d7EFfEFdB084DfEB1621348c8C70cc4e871Eba4");
 ```
-  * Get detail info of pets from tokenID
+  * Get detail info of photos from tokenID
 ```    
-    getPet(1);
+    getPhoto(1);
 ```
 
-## The CP Token MarketPlace
+## The PC Token MarketPlace
 
 ### Structure
   * General
 
-There are three that have inherit relationships leading to the CP Token Marketplace Contract
+There are three that have inherit relationships leading to the PC Token Marketplace Contract
 
-SafeMath -> PetCore -> PetMarket
+SafeMath -> PhotoCore -> PhotoMarket
 
 
   * Orderbook Structure
 
-The orderbook for pets is a simple array
+The orderbook for photos is a simple array
 
     uint[] public forSale; //array of tokenId's for sale
 
@@ -146,10 +144,10 @@ Additional mappings enable us to look at details
 #### Functions
    
     Public Functions
-      PetMarket.sol
-        listPet
-        unlistPet
-        buyPet
+      PhotoMarket.sol
+        listPhoto
+        unlistPhoto
+        buyPhoto
         getOrder
         withdrawFunds
       
@@ -162,33 +160,33 @@ Additional mappings enable us to look at details
     truffle develop
     migrate
 ```   
-  * List a Pet on the orderbook
+  * List a Photo on the orderbook
 ```
-    listPet(1,5000000000000000000); //note price is in wei
-    Note: The pet is transfered to the market contract upon listing
+    listPhoto(1,5000000000000000000); //note price is in wei
+    Note: The photo is transfered to the market contract upon listing
 ```
   * Query the orderbook for the details
 ```
     getOrder(1); //returns the order maker and the price
 ```   
-  * Buy a Pet
+  * Buy a Photo
 ```
-    buyPet(1); //you must send with it the correct value
+    buyPhoto(1); //you must send with it the correct value
 ```
   * Withdraw your Funds
 ```
-    withdraw(); //e.g. Assuming you sold a pet for 5 ether, you can now withdraw your 5 ether from the contract.
+    withdraw(); //e.g. Assuming you sold a photo for 5 ether, you can now withdraw your 5 ether from the contract.
 ```
-  * Unlist a Pet
+  * Unlist a Photo
 ```
-    unlistPet(1); //You must be the one who placed the order or owner. 
+    unlistPhoto(1); //You must be the one who placed the order or owner. 
 ```
 
 
 
 #### Notes:
 
-All contracts are owned by Alluminate.
+All contracts are owned by David Tera
 
 
 ## Testing
