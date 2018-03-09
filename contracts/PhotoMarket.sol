@@ -5,13 +5,13 @@ pragma solidity ^0.4.18;
 
 /**
 *@title PhotoMarket
-* The market contract which holds the orderbook for CryptoPets to allow buying and selling
+* The market contract which holds the orderbook for Photos to allow buying, selling, and liscenses
 */
 contract PhotoMarket{
     using SafeMath for uint256;
 
     /***VARIABLES***/
-    PetCore token; //The PetCore contract for linking to the CryptoPets token
+    PhotoCore token; //The PhotoCore contract for linking to the Photocoin token
     address public owner; //The owner of the market contract
     
     /***DATA***/
@@ -27,6 +27,19 @@ contract PhotoMarket{
     uint[] public forSale;
     //Index telling where a specific tokenId is in the forSale array
     mapping(uint256 => uint256) forSaleIndex;
+
+
+
+    //Maps a tokenId to a specific Lease Order (owner/price)
+    mapping(uint256 => Order[]) public leases;
+    //Index telling where a specific tokenId is in the leases Order array
+    mapping(uint256 => uint256) leasesIndex;
+    //An array of tokens for lease
+    uint[] public forLease;
+    //Index telling where a specific tokenId is in the forLease array
+    mapping(uint256 => uint256) forLeaseIndex;
+
+
     //A list of the blacklisted addresses
     mapping(address => bool) blacklist;
 
@@ -42,14 +55,18 @@ contract PhotoMarket{
     event OrderPlaced(uint256 _tokenId, address _seller,uint256 _price);
     event Sale(address _buyer, address _seller, uint256 _tokenId, uint256 _price);
     event OrderRemoved(uint256 _tokenId);
+    event LeaseOrderPlaced(uint256 _tokenId, address _seller,uint256 _price);
+    event Lease(address _buyer, address _seller, uint256 _tokenId, uint256 _price);
+    event LeaseOrderRemoved(uint256 _tokenId);
 
     /***FUNCTIONS***/
     /*
     *@dev the constructor argument to set the owner and initialize the array.
     */
-    function PetMarket() public{
+    function PhotoMarket() public{
         owner = msg.sender;
         forSale.push(0);
+        forLease.push(0);
     }
 
     /*
@@ -60,11 +77,11 @@ contract PhotoMarket{
     }
 
     /*
-    *@dev listPet allows a party to place a pet on the orderbook
-    *@param _tokenId uint256 ID of pet
-    *@param _price uint256 price of pet in wei
+    *@dev listPhoto allows a party to place a photo on the orderbook
+    *@param _tokenId uint256 ID of photo
+    *@param _price uint256 price of photo in wei
     */
-    function listPet(uint256 _tokenId, uint256 _price) external {
+    function listPhoto(uint256 _tokenId, uint256 _price) external {
         require(token.ownerOf(_tokenId) == msg.sender);
         require(blacklist[msg.sender] == false);
         require(_price > 0);
@@ -79,10 +96,10 @@ contract PhotoMarket{
     }
 
     /*
-    *@dev unlistPet allows a party to remove their order from the orderbook
-    *@param _tokenId uint256 ID of pet
+    *@dev unlistPhoto allows a party to remove their order from the orderbook
+    *@param _tokenId uint256 ID of photo
     */
-    function unlistPet(uint256 _tokenId) external{
+    function unlistPhoto(uint256 _tokenId) external{
         require(forSaleIndex[_tokenId] > 0);
         Order memory _order = orders[_tokenId];
         require(msg.sender== _order.maker || msg.sender == owner);
@@ -92,10 +109,10 @@ contract PhotoMarket{
     }
 
     /*
-    *@dev buyPet allows a party to send Ether to buy a pet off of the orderbook
-    *@param _tokenId uint256 ID of pet
+    *@dev buyPhoto allows a party to send Ether to buy a photo off of the orderbook
+    *@param _tokenId uint256 ID of photo
     */
-    function buyPet(uint256 _tokenId) external payable {
+    function buyPhoto(uint256 _tokenId) external payable {
         Order memory _order = orders[_tokenId];
         require(msg.value == _order.price);
         require(blacklist[msg.sender] == false);
@@ -108,7 +125,7 @@ contract PhotoMarket{
 
     /*
     *@dev getOrder lists the price and maker of a specific token
-    *@param _tokenId uint256 ID of pet
+    *@param _tokenId uint256 ID of photo
     */
     function getOrder(uint256 _tokenId) external view returns(address,uint){
         Order storage _order = orders[_tokenId];
@@ -124,11 +141,11 @@ contract PhotoMarket{
     }
 
     /*
-    *@dev allows the owner to set the address of the CryptoPet token
-    *@param _token address of the CryptoPet token (PetCore.sol)
+    *@dev allows the owner to set the address of the PhotoCoin token
+    *@param _token address of the PhotoCoin token (PhotoCore.sol)
     */
     function setToken(address _token) public onlyOwner() {
-        token = PetCore(_token);
+        token = PhotoCore(_token);
     }
 
     /*
@@ -159,7 +176,7 @@ contract PhotoMarket{
     /***INTERNAL FUNCTIONS***/
     /*
     *@dev An internal function to update mappings when an order is removed from the book
-    *@param _tokenId uint256 ID of pet
+    *@param _tokenId uint256 ID of photo
     */
     function unLister(uint256 _tokenId) internal{
         uint256 tokenIndex = forSaleIndex[_tokenId];

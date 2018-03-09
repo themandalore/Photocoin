@@ -14,6 +14,9 @@ contract PhotoBase is ERC721{
     /*** DATA TYPES ***/
     /// @dev The main Photo struct
     struct Photo {
+        string name;//Name of photograph
+        string photographer;//Name of photographer
+        bytes32 photoHash; //Hash of photo
         uint256 isenNumber;// The unique ISEN number
         uint64 uploadTime;// The timestamp from the block when this came into existence
     }
@@ -28,7 +31,7 @@ contract PhotoBase is ERC721{
         _;
     }
 
-        /// @dev Access modifier for Owner functionality
+        /// @dev Access modifier for Whitelisted participants functionality
     modifier onlyWhitelist() {
         require(whitelist[msg.sender] == true);
         _;
@@ -36,7 +39,7 @@ contract PhotoBase is ERC721{
 
     /*** EVENTS ***/
     /// @dev The Upload event is fired whenever a new photo is uploaded
-    event Upload(address indexed _owner, bytes32 _photoId, uint _uploadTime);
+    event Upload(address indexed _owner, uint256 _photoId,bytes32 _photoHash, string _name, string _photographer, uint _isenNumber);
 
 
     /***FUNCTIONS***/
@@ -59,23 +62,23 @@ contract PhotoBase is ERC721{
 
     /**
     *@dev allows the owner to set the official marketplace of the token
-    *@param _market is the address of the PetMarket contract
+    *@param _market is the address of the PhotoMarket contract
     */
-    function setMarket(address _user) public onlyOwner() {
+    function setWhitelist(address _user) public onlyOwner() {
         whitelist[_user] = true;
     }
 
     /**
-    *@dev allows for the details of the pet to be viewed
+    *@dev allows for the details of the photo to be viewed
     *@param _tokenId is the address of the new owner
-    *@return string kind
-    *@return string genes
-    *@return uint64 birthTime
-    *@return uint256 experience
+    *@return string  name
+    *@return string photographer
+    *@return uint256 isenNumber
+    *@return uint64 uploadTime
     */
-    function getPhoto(uint _tokenId) public view returns(string, string, uint64){
+    function getPhoto(uint _tokenId) public view returns(string,string,uint256, uint64){
         Photo memory _photo = photos[_tokenId];
-        return (_photo.kind,_photo.genes,_photo.birthTime);
+        return (_photo.Name,_photo.photographer,_photo.isenNumber,_photo.uploadTime);
     }
 
   /**

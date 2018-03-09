@@ -1,17 +1,17 @@
-# CryptoPets Smart Contract Guide
+# Photocoin Smart Contract Guide
 
-![CryptoPets](./images/Logo.png)
+![Photocoin](./public/camera.jpeg)
 
 
 
 # Contracts
 
 There are two contracts deployed:
-1. The token contract (PetCore.sol)
-2. The marketplace contract (PetMarket.sol)
+1. The token contract (PhotoCore.sol)
+2. The marketplace contract (PhotoMarket.sol)
 
 
-## The CP Token
+## The PC Token
 
 ### Structure
 
@@ -19,13 +19,13 @@ There are two contracts deployed:
 
 There are four contracts that have inherit relationships leading to the CP Token
 
-SafeMath -> ERC721 -> PetBase -> PetCore
+SafeMath -> ERC721 -> PhotoBase -> PhotoCore
 
 
 
-#### Pet Structure
+#### Photocoin Structure
 
-Each pet has 3 params to specify itself.
+Each tokenized photograph has 2 params to specify itself.
 
     Pet {
     kind, // the type of pets

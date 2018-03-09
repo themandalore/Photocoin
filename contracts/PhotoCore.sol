@@ -3,8 +3,8 @@ pragma solidity ^0.4.18;
 import "./PhotoBase.sol";
 
 /**
-*@title PetCore
-* Front contract for CryptoPets. Holds create pet funtionality and token name and symbol
+*@title PhotoCore
+* Front contract for Photocoin. Holds create pet funtionality and token name and symbol
 */
 contract PhotoCore is PhotoBase{
     // @notice Name and symbol of the non fungible token, as defined in ERC721.
@@ -12,8 +12,7 @@ contract PhotoCore is PhotoBase{
     string public symbol = "PC";
 
     /**
-    *@dev Creates the main Photocoin smart contract instance.
-    * sets the owenr and issues the first pet
+    *@dev Creates the main Photocoin smart contract instance and sets the owner
     */
     function PhotoCore() public {
         owner = msg.sender;
@@ -28,23 +27,27 @@ contract PhotoCore is PhotoBase{
     }
 
     /**
-    *@dev this is the function to create a pet and update the mappings with a new pet
-    *@param _kind a string variable repreenting the kind of cryptopet
-    *@param _genes a string variable representing the unique genes of the cryptopet
-    *@param _owner an address to which the pet will be given, defaults to the owner
+    *@dev this is the function to create a new photocoin and update the mappings with a new token
+    *@param _photoHash is the hash of the photograph
+    *@param _name is a string variable representing the name of the photograph
+    *@param _photographer is a string variable representing the name of the photographer
+    *@param _isenNumber is the uint ISEN number
+    *@param _owner is the address of the new owner of the token
     */
-    function uploadPhoto(bytes32 _photoHash,uint256 _isenNumber, address _owner) public onlyOwner() {
+    function uploadPhoto(bytes32 _photoHash,string _name, string _photographer, uint256 _isenNumber, address _owner) public onlyOwner() {
         if(_owner == address(0)) {
             _owner = owner;
         }
-        uint256 newPetId = totalTokens;
-        pets[newPetId] = Pet({
-            kind: _kind,
-            genes: _genes,
-            birthTime: uint64(now)
+        uint256 newId = totalTokens;
+        photos[newId] = Photo({
+            name: _name,
+            photographer: _photographer,
+            photoHash: _photoHash,
+            isenNumber: _isenNumber,
+            uploadTime: uint64(now)
             });
-        transferFrom(address(0),_owner,newPetId);
-        Birth(_owner,newPetId, _kind, _genes);
+        transferFrom(address(0),_owner,newId);
+        Upload(_owner,newId,_photoHash, _name,_photographer,_isenNumber);
     }
 
 

@@ -13,9 +13,9 @@ contract ERC721 {
   uint256 public totalTokens;
   //A list of functions / interfaces supported by this contract
   mapping(bytes4 => bool) internal supportedInterfaces;
-  //A mapping from the pet ID to the owner of the token.
+  //A mapping from the token ID to the owner of the token.
   mapping(uint256 => address) tokenOwner;
-  //A mapping from PetIDs to an address that has been approved to call
+  //A mapping from tokenIDs to an address that has been approved to call
   mapping(uint256 => address) tokenApproval;
   // Mapping from owner to list of owned token IDs
   mapping(address => uint256[]) ownedTokens;
@@ -55,7 +55,7 @@ contract ERC721 {
   }
 
   /** 
-   * @dev Transfers a specific pet from one address to another
+   * @dev Transfers a specific token from one address to another
    * @param _from is the address that the token will be sent from
    * @param _to is the address we are sending the token to
    * @param _tokenId the numeric identifier of a token
