@@ -16,6 +16,7 @@ contract PhotoCore is PhotoBase{
     */
     function PhotoCore() public {
         owner = msg.sender;
+        whitelist[owner] = true;
     }
 
     /**

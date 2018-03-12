@@ -4,7 +4,7 @@ var DefaultBuilder = require("truffle-default-builder");
 var mnemonic = "other tray hint valid buyer fiscal patch fly damp ocean produce wish";
 
 module.exports = {
-   build: new DefaultBuilder({
+   /*build: new DefaultBuilder({
     "index.html": "index.html",
     "main.js": [
       "main.js"
@@ -12,7 +12,7 @@ module.exports = {
     "app.css": [
       "app.css"
     ]
-  }),
+  }),*/
   networks: {
     development: {
       host: "localhost",

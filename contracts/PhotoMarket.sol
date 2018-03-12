@@ -39,9 +39,15 @@ contract PhotoMarket{
     //Index telling where a specific tokenId is in the forLease array
     mapping(uint256 => uint256) forLeaseIndex;
 
-
     //A list of the blacklisted addresses
     mapping(address => bool) blacklist;
+
+    address public highestBidder;
+    uint public highestBid;
+    mapping(address => uint) pendingReturns;
+
+    event HighestBidIncreased(address bidder, uint amount);
+    event AuctionEnded(address winner, uint amount);
 
     /***MODIFIERS***/
     /// @dev Access modifier for Owner functionality
@@ -113,6 +119,54 @@ contract PhotoMarket{
     *@param _tokenId uint256 ID of photo
     */
     function buyPhoto(uint256 _tokenId) external payable {
+        Order memory _order = orders[_tokenId];
+        require(msg.value == _order.price);
+        require(blacklist[msg.sender] == false);
+        address maker = _order.maker;
+        token.transferFrom(address(this),msg.sender, _tokenId);
+        unLister(_tokenId);
+        maker.transfer(msg.value);
+        Sale(msg.sender,maker,_tokenId,_order.price);
+    }
+
+
+    /*
+    *@dev listLease allows a party to place a photo on the orderbook for lease
+    *@param _tokenId uint256 ID of photo
+    *@param _price uint256 price of leasing the photo in wei
+    */
+    function listLease(uint256 _tokenId, uint256 _price) external {
+        require(token.ownerOf(_tokenId) == msg.sender);
+        require(blacklist[msg.sender] == false);
+        require(_price > 0);
+        token.transferFrom(msg.sender,address(this),_tokenId);
+        forSaleIndex[_tokenId] = forSale.length;
+        forSale.push(_tokenId);
+        orders[_tokenId] = Order({
+            maker: msg.sender,
+            price: _price
+        });
+        OrderPlaced(_tokenId,msg.sender,_price);
+    }
+
+    /*
+    *@dev unlistLease allows a party to remove their order from the lease orderbook
+    *@param _tokenId uint256 ID of photo
+    */
+    function unlistLease(uint256 _tokenId) external{
+        require(forSaleIndex[_tokenId] > 0);
+        Order memory _order = orders[_tokenId];
+        require(msg.sender== _order.maker || msg.sender == owner);
+        unLister(_tokenId);
+        token.transferFrom(address(this),msg.sender,_tokenId);
+        OrderRemoved(_tokenId);
+    }
+
+    /*
+    *@dev buyLease allows a party to send Ether to buy a photo off of the lease orderbook
+    *@param _tokenId uint256 ID of photo
+    */
+    function buyLease(uint256 _tokenId) external payable {
         Order memory _order = orders[_tokenId];
         require(msg.value == _order.price);
         require(blacklist[msg.sender] == false);

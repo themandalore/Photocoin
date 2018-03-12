@@ -10,6 +10,7 @@ contract PhotoBase is ERC721{
     /***VARIABLES***/
     address public owner; //The owner of the contract
     address public marketContract; //The addresss of the official marketplace contract
+    address public auctionContract; //The addresss of the official auction contract
 
     /*** DATA TYPES ***/
     /// @dev The main Photo struct
@@ -21,19 +22,13 @@ contract PhotoBase is ERC721{
         uint64 uploadTime;// The timestamp from the block when this came into existence
     }
     /*** STORAGE ***/
-    mapping(bytes32 => Photo) photos;//A mapping from photoId to the details of the photo
+    mapping(uint256 => Photo) photos;//A mapping from photoId to the details of the photo
     mapping(address => bool) whitelist;// A list of addresses approved to trade
 
     /***MODIFIERS***/
     /// @dev Access modifier for Owner functionality
     modifier onlyOwner() {
         require(msg.sender == owner);
-        _;
-    }
-
-        /// @dev Access modifier for Whitelisted participants functionality
-    modifier onlyWhitelist() {
-        require(whitelist[msg.sender] == true);
         _;
     }
 
@@ -58,14 +53,29 @@ contract PhotoBase is ERC721{
     function setMarket(address _market) public onlyOwner() {
         marketContract = _market;
     }
+    /**
+    *@dev allows the owner to set the official auction of the token
+    *@param _market is the address of the PhotoMarket contract
+    */
+    function setAuction(address _auction) public onlyOwner() {
+        auctionContract = _auction;
+    }
+
+    /**
+    *@dev allows the owner to manage the whitelist
+    *@param _user is the user to allow to trade
+    */
+    function setWhitelist(address _user, bool _trueorfalse) public onlyOwner() {
+        whitelist[_user] = _trueorfalse;
+    }
 
 
     /**
     *@dev allows the owner to set the official marketplace of the token
-    *@param _market is the address of the PhotoMarket contract
+    *@param _user is the user to allow to trade
     */
-    function setWhitelist(address _user) public onlyOwner() {
-        whitelist[_user] = true;
+    function isWhitelist(address _user) public view returns(bool){
+        return whitelist[_user];
     }
 
     /**
@@ -78,7 +88,7 @@ contract PhotoBase is ERC721{
     */
     function getPhoto(uint _tokenId) public view returns(string,string,uint256, uint64){
         Photo memory _photo = photos[_tokenId];
-        return (_photo.Name,_photo.photographer,_photo.isenNumber,_photo.uploadTime);
+        return (_photo.name,_photo.photographer,_photo.isenNumber,_photo.uploadTime);
     }
 
   /**
@@ -87,8 +97,9 @@ contract PhotoBase is ERC721{
    * @param _to is the address we are sending the token to
    * @param _tokenId the numeric identifier of a token
   */
-  function transferFrom(address _from, address _to, uint256 _tokenId) public{
-    require(msg.sender == owner || isApproved(msg.sender,_from) || isApproved(msg.sender,_from,_tokenId) || ownerOf(_tokenId)==msg.sender || msg.sender==marketContract);
+  function transferFrom(address _from, address _to, uint256 _tokenId)  public{
+    require(msg.sender == owner || isApproved(msg.sender,_from) || isApproved(msg.sender,_from,_tokenId) || ownerOf(_tokenId)==msg.sender || msg.sender==marketContract || msg.sender==auctionContract);
+    require(whitelist[_to] == true);
     clearApprovalAndTransfer(_from,_to,_tokenId);
   }
 }
