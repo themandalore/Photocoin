@@ -118,16 +118,17 @@ Each tokenized photograph has 5 params to specify itself.
 ### Structure
   * General
 
-There are three that have inherit relationships leading to the PC Token Marketplace Contract
+There are three contracts that have inherit relationships leading to the PC Token Marketplace Contract
 
 SafeMath -> PhotoCore -> PhotoMarket
 
 
   * Orderbook Structure
 
-The orderbook for photos is a simple array
+The orderbooks for photo sales and leases are simple arrays
 
     uint[] public forSale; //array of tokenId's for sale
+    uint[] public forLease;//An array of tokens for lease
 
 Additional mappings enable us to look at details
 
@@ -135,9 +136,25 @@ Additional mappings enable us to look at details
         address maker;// the placer of the order
         uint price;// The price in wei
     }
+     //Maps a tokenId to a specific Order (owner/price)
     mapping(uint256 => Order) public orders;
     //Index telling where a specific tokenId is in the forSale array
     mapping(uint256 => uint256) forSaleIndex;
+     //Maps a tokenId to a specific Lease Order (owner/price)
+    mapping(uint256 => Order) public leases;
+    //Shows which tokens a party has bought rights for
+    mapping(address => uint[]) leasesOwned;
+    //Shows which parties have rights to a token
+    mapping(uint256 => address[]) tokenLeases;
+    //Index telling where a specific tokenId is in the forLease array
+    mapping(uint256 => uint256) forLeaseIndex;
+    //Index telling if a tokenId is listed
+    mapping(uint256 => bool) forLeaseListed;
+    
+There is also an additional blacklist to punish orderbook abusers
+
+    //A list of the blacklisted addresses
+    mapping(address => bool) blacklist;
 
 
 ### Functions and Variables
@@ -152,11 +169,24 @@ Additional mappings enable us to look at details
    
     Public Functions
       PhotoMarket.sol
+        PhotoMarket //Constructor
         listPhoto
         unlistPhoto
         buyPhoto
+        listLease
+        unlistLease
+        buyLease
         getOrder
-        withdrawFunds
+        getLeases
+        getLeasebyOwner
+        getTokenLeases
+        setOwner
+        blacklistParty
+        isBlacklist
+        getOrderCount
+        getLeaseCount
+        setFee
+        withdraw
       
    
 #### Setup and Basic Functions
@@ -189,6 +219,90 @@ Additional mappings enable us to look at details
     unlistPhoto(1); //You must be the one who placed the order or owner. 
 ```
 
+Leasing a photo uses the exact same workflow as buying/selling a token, only once leased, the token is not removed from the orderbook as multiple parties can own the rights to use a photograph
+
+## The PC Token Auction contract
+
+### Structure
+  * General
+
+There are three contracts that have inherit relationships leading to the PC Token Auction Contract
+
+SafeMath -> PhotoCore -> Auction
+
+  * Auction structure
+
+The owner is the only one permitted to initiate an auction.  
+
+A token is placed up for auction in the auctions array
+
+    Details[] public auctions; //array of auction details
+
+Additional mappings enable us to look at details
+
+    struct Details {
+        uint tokenId;
+        address highestBidder;//Name of photograph
+        uint highestBid;//Name of photographer
+        bool ended;
+        uint auctionEnd; //Hash of photo
+     }
+    mapping(uint => uint) public auctionIndex; //Gets position of a token in the auction array
+    mapping(address => uint) public pendingReturns;//maps addresses to the amount they can withdraw form the contract
+
+### Functions and Variables
+
+#### Variables
+```
+   Public Variables
+      owner 
+```
+
+#### Functions
+   
+    Public Functions
+      Auction.sol
+        Auction //Constructor
+        setAuction
+        bid
+        withdraw
+        endAuction
+        getHighestBid
+        getHighestBidder
+        getAuctionEnd
+        getEnded
+        getNumberofAuctions
+        setToken
+        setOwner
+
+      
+   
+#### Setup and Basic Functions
+
+  * Deploy Contracts
+```       
+    truffle compile
+    truffle develop
+    migrate
+```   
+  * Auction a Photo (Only Owner can perform this function)
+```
+    auction.setAuction(86400 * 7,10); //note the first variable is in seconds, second is the token ID
+    Note: The photo is transfered to the market contract upon listing
+```
+  * Place a bid for the Photo
+```
+    bid(10); //the variable is the tokenId and the value of the bid is the amount sent with call
+```   
+  * Withdraw money from contract
+```
+    Withdraw; //if your bid is no longer the highest, you can withdraw your ether
+```
+  * End the Auction
+```
+    endAuction(10); //The variable is the tokenId.  Once the time of the auction is over, this function transfers the token to the highest bidder and the owner can now withdraw the highest bid
+```
+  * The owner can now withdraw funds like any other contract participant
 
 
 #### Notes:
