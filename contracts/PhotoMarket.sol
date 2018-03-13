@@ -13,6 +13,8 @@ contract PhotoMarket{
     /***VARIABLES***/
     PhotoCore token; //The PhotoCore contract for linking to the Photocoin token
     address public owner; //The owner of the market contract
+    uint public fee; //The percentage fee charged to each contract to 3 decimals (so 1000 is a 100% fee, 50 is a 5% fee, and 10 is a 1% fee)
+    
     
     /***DATA***/
     //This is the base data structure for an order (the maker of the order and the price)
@@ -31,23 +33,20 @@ contract PhotoMarket{
 
 
     //Maps a tokenId to a specific Lease Order (owner/price)
-    mapping(uint256 => Order[]) public leases;
-    //Index telling where a specific tokenId is in the leases Order array
-    mapping(uint256 => uint256) leasesIndex;
+    mapping(uint256 => Order) public leases;
+    //Shows which tokens a party has bought rights for
+    mapping(address => uint[]) leasesOwned;
+    //Shows which parties have rights to a token
+    mapping(uint256 => address[]) tokenLeases;
     //An array of tokens for lease
     uint[] public forLease;
     //Index telling where a specific tokenId is in the forLease array
     mapping(uint256 => uint256) forLeaseIndex;
+    //Index telling if a tokenId is listed
+    mapping(uint256 => bool) forLeaseListed;
 
     //A list of the blacklisted addresses
     mapping(address => bool) blacklist;
-
-    address public highestBidder;
-    uint public highestBid;
-    mapping(address => uint) pendingReturns;
-
-    event HighestBidIncreased(address bidder, uint amount);
-    event AuctionEnded(address winner, uint amount);
 
     /***MODIFIERS***/
     /// @dev Access modifier for Owner functionality
@@ -88,6 +87,7 @@ contract PhotoMarket{
     *@param _price uint256 price of photo in wei
     */
     function listPhoto(uint256 _tokenId, uint256 _price) external {
+        require(forLeaseListed[_tokenId] == false);
         require(token.ownerOf(_tokenId) == msg.sender);
         require(blacklist[msg.sender] == false);
         require(_price > 0);
@@ -125,7 +125,7 @@ contract PhotoMarket{
         address maker = _order.maker;
         token.transferFrom(address(this),msg.sender, _tokenId);
         unLister(_tokenId);
-        maker.transfer(msg.value);
+        maker.transfer(_order.price.mul(1000-fee).div(1000));
         Sale(msg.sender,maker,_tokenId,_order.price);
     }
 
@@ -137,16 +137,17 @@ contract PhotoMarket{
     */
     function listLease(uint256 _tokenId, uint256 _price) external {
         require(token.ownerOf(_tokenId) == msg.sender);
+        require(forLeaseListed[_tokenId] == false);
         require(blacklist[msg.sender] == false);
         require(_price > 0);
-        token.transferFrom(msg.sender,address(this),_tokenId);
-        forSaleIndex[_tokenId] = forSale.length;
-        forSale.push(_tokenId);
-        orders[_tokenId] = Order({
+        forLeaseIndex[_tokenId] = forLease.length;
+        forLease.push(_tokenId);
+        leases[_tokenId] = Order({
             maker: msg.sender,
             price: _price
         });
-        OrderPlaced(_tokenId,msg.sender,_price);
+        LeaseOrderPlaced(_tokenId,msg.sender,_price);
+        forLeaseListed[_tokenId] = true;
     }
 
     /*
@@ -154,26 +155,27 @@ contract PhotoMarket{
     *@param _tokenId uint256 ID of photo
     */
     function unlistLease(uint256 _tokenId) external{
-        require(forSaleIndex[_tokenId] > 0);
-        Order memory _order = orders[_tokenId];
+        require(forLeaseIndex[_tokenId] > 0);
+        Order memory _order = leases[_tokenId];
         require(msg.sender== _order.maker || msg.sender == owner);
-        unLister(_tokenId);
-        token.transferFrom(address(this),msg.sender,_tokenId);
-        OrderRemoved(_tokenId);
+        unLeaster(_tokenId);
+        LeaseOrderRemoved(_tokenId);
+        forLeaseListed[_tokenId] = false;
     }
 
     /*
     *@dev buyLease allows a party to send Ether to buy a photo off of the lease orderbook
     *@param _tokenId uint256 ID of photo
+    *@Note currently this does not unlist the product; as multiple parties can pay the fee to use the rights
     */
     function buyLease(uint256 _tokenId) external payable {
-        Order memory _order = orders[_tokenId];
+        Order memory _order = leases[_tokenId];
         require(msg.value == _order.price);
         require(blacklist[msg.sender] == false);
         address maker = _order.maker;
-        token.transferFrom(address(this),msg.sender, _tokenId);
-        unLister(_tokenId);
-        maker.transfer(msg.value);
+        leasesOwned[msg.sender].push(_tokenId);
+        tokenLeases[_tokenId].push(msg.sender);
+        maker.transfer(_order.price.mul(1000-fee).div(1000));
         Sale(msg.sender,maker,_tokenId,_order.price);
     }
 
@@ -185,6 +187,24 @@ contract PhotoMarket{
         Order storage _order = orders[_tokenId];
         return (_order.maker,_order.price);
     }
+
+    /*
+    *@dev getOrder lists the price and maker of a specific token
+    *@param _tokenId uint256 ID of photo
+    */
+    function getLeases(uint256 _tokenId) external view returns(address,uint){
+        Order storage _order = leases[_tokenId];
+        return (_order.maker,_order.price);
+    }
+
+    function getLeasebyOwner(address _party) external view returns(uint[]){
+        return leasesOwned[_party];
+    }
+
+    function getTokenLeases(uint256 _tokenId) external view returns(address[]){
+        return tokenLeases[_tokenId];
+    }
+
 
     /*
     *@dev allows the owner to change who the owner is
@@ -227,6 +247,22 @@ contract PhotoMarket{
         return forSale.length;
     }
 
+    /*
+    *@dev allows the owner to set the address of the fee for the marketplace contract
+    *@param _fee percentage fee charged to each contract to 3 decimals (so 1000 is a 100% fee, 50 is a 5% fee, and 10 is a 1% fee)
+    */
+    function setFee(uint _fee) public onlyOwner() {
+        fee = _fee;
+    }
+
+    /*
+    *@dev allows owner to withdraw funds
+    */
+    function withdraw() public onlyOwner(){
+        owner.transfer(this.balance);
+    }
+
+
     /***INTERNAL FUNCTIONS***/
     /*
     *@dev An internal function to update mappings when an order is removed from the book
@@ -243,5 +279,22 @@ contract PhotoMarket{
         forSale[tokenIndex] = lastToken;
         forSale.length--;
         forSaleIndex[_tokenId] = 0;
+    }
+
+        /*
+    *@dev An internal function to update mappings when a lease is removed from the book
+    *@param _tokenId uint256 ID of photo
+    */
+    function unLeaster(uint256 _tokenId) internal{
+        uint256 tokenIndex = forLeaseIndex[_tokenId];
+        uint256 lastTokenIndex = forLease.length.sub(1);
+        uint256 lastToken = forLease[lastTokenIndex];
+        leases[_tokenId] = Order({
+            maker: address(0),
+            price: 0
+        });
+        forLease[tokenIndex] = lastToken;
+        forLease.length--;
+        forLeaseIndex[_tokenId] = 0;
     }
 }

@@ -1,8 +1,8 @@
 pragma solidity ^0.4.18;
 
-import "./PhotoCore.sol";
+import "../PhotoCore.sol";
 
-contract Auction {
+contract testAuction {
     address public owner;
 
     mapping(address => uint) pendingReturns;
@@ -24,7 +24,7 @@ contract Auction {
     }
 
     /***FUNCTIONS***/
-    function Auction () public {
+    function testAuction () public {
         owner = msg.sender;
     }
     
@@ -36,7 +36,7 @@ contract Auction {
     }
 
     function bid(uint256 _token) public payable {
-        require(now <= auctionEnd[_token]);
+        //require(now <= auctionEnd[_token]);
         require(msg.value > highestBid[_token]);
         if (highestBid[_token] != 0) {
             pendingReturns[highestBidder[_token]] += highestBid[_token];
@@ -60,7 +60,7 @@ contract Auction {
 
 
     function endAuction(uint _token) public {
-        require(now >= auctionEnd[_token]);
+        //require(now >= auctionEnd[_token]);
         require(!ended[_token]);
         ended[_token] = true;
         AuctionEnded(_token,highestBidder[_token], highestBid[_token]);
