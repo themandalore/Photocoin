@@ -7,12 +7,20 @@ contract Auction {
     address public owner; //owner of the contracts
     PhotoCore token; //The PhotoCore contract for linking to the Photocoin token
 
+
+    /// @dev The main Photo struct
+    struct Details {
+        uint tokenId;
+        address highestBidder;//Name of photograph
+        uint highestBid;//Name of photographer
+        bool ended;
+        uint auctionEnd; //Hash of photo
+     }
+
     /***STORAGE***/
-    mapping(address => uint) pendingReturns;//maps addresses to the amount they can withdraw form the contract
-    mapping (uint256 => address ) highestBidder;//maps a token to the highestBidder address for that token
-    mapping (uint256 => uint) highestBid;//maps a token to the highestBid in wei for that token
-    mapping (uint256 => bool ) ended;//maps a token to whether the auction for that token has ended
-    mapping (uint256 => uint) auctionEnd; //maps a token to the end UNIX time for that auction
+    Details[] public auctions;//an array of all auctions
+    mapping(uint => uint) public auctionIndex; //Gets position of a token in the auction array
+    mapping(address => uint) public pendingReturns;//maps addresses to the amount they can withdraw form the contract
 
     /***EVENTS***/
     //event that indicates that the highest bid for a token has increased
@@ -29,13 +37,20 @@ contract Auction {
 
     /***FUNCTIONS***/
     /**
-    *@dev Constructor function to set the owner
+    *@dev Constructor function to set the owner and initialize the array
     */
     function Auction () public {
         owner = msg.sender;
+        auctions.push(Details({
+            tokenId:0,
+            highestBidder: owner,
+            highestBid: 0,
+            ended: false,
+            auctionEnd: 0
+        }));
     }
     
-        /*
+    /*
     *@dev The fallback function to prevent money from being sent to the contract
     */
     function()  payable public{
@@ -48,7 +63,14 @@ contract Auction {
     *@param _token the unique tokenId
     */
     function setAuction(uint _biddingTime,uint256 _token) public onlyOwner() {
-        auctionEnd[_token] = now + _biddingTime;
+        auctionIndex[_token] = auctions.length;
+        auctions.push(Details({
+            tokenId: _token,
+            highestBidder: owner,
+            highestBid: 0,
+            ended: false,
+            auctionEnd: now + _biddingTime
+            }));
         token.transferFrom(msg.sender,address(this),_token);
     }
 
@@ -57,13 +79,20 @@ contract Auction {
     *@param _token the unique tokenId
     */
     function bid(uint256 _token) public payable {
-        require(now <= auctionEnd[_token]);
-        require(msg.value > highestBid[_token]);
-        if (highestBid[_token] != 0) {
-            pendingReturns[highestBidder[_token]] += highestBid[_token];
+
+        Details memory _auction = auctions[auctionIndex[_token]];
+        require(now <= _auction.auctionEnd);
+        require(msg.value > _auction.highestBid);
+        if (_auction.highestBid != 0) {
+            pendingReturns[_auction.highestBidder] += _auction.highestBid;
         }
-        highestBidder[_token] = msg.sender;
-        highestBid[_token] = msg.value;
+        auctions[auctionIndex[_token]] = Details({
+            tokenId: _token,
+            highestBidder: msg.sender,
+            highestBid: msg.value,
+            ended: false,
+            auctionEnd: _auction.auctionEnd
+            });
         HighestBidIncreased(_token,msg.sender, msg.value);
     }
 
@@ -82,18 +111,24 @@ contract Auction {
         return true;
     }
 
-
     /**
     *@dev allows anyone to end the auction once the end date is reached
     *@param _token the unique tokenId
     */
     function endAuction(uint _token) public {
-        require(now >= auctionEnd[_token]);
-        require(!ended[_token]);
-        ended[_token] = true;
-        AuctionEnded(_token,highestBidder[_token], highestBid[_token]);
-        token.transferFrom(address(this),highestBidder[_token], _token);
-        pendingReturns[owner] += highestBid[_token];
+        Details memory _auction = auctions[auctionIndex[_token]];
+        require(now > _auction.auctionEnd);
+        require(_auction.ended = false);
+        auctions[auctionIndex[_token]] = Details({
+            tokenId: _token,
+            highestBidder: _auction.highestBidder,
+            highestBid: _auction.highestBid,
+            ended: true,
+            auctionEnd: _auction.auctionEnd
+        });
+        AuctionEnded(_token,_auction.highestBidder,_auction.highestBid);
+        token.transferFrom(address(this),_auction.highestBidder, _token);
+        pendingReturns[owner] += _auction.highestBid;
     }
 
     /**
@@ -101,7 +136,8 @@ contract Auction {
     *@param _token the unique tokenId
     */
     function getHighestBid(uint _token) public constant returns(uint){
-        return highestBid[_token];
+        Details memory _auction = auctions[auctionIndex[_token]];
+        return _auction.highestBid;
     }
 
     /**
@@ -109,7 +145,8 @@ contract Auction {
     *@param _token the unique tokenId
     */
     function getHighestBidder(uint _token) public constant returns(address){
-        return highestBidder[_token];
+        Details memory _auction = auctions[auctionIndex[_token]];
+        return _auction.highestBidder;
     }
 
     /**
@@ -117,7 +154,8 @@ contract Auction {
     *@param _token the unique tokenId
     */
     function getAuctionEnd(uint _token) public constant returns(uint){
-        return auctionEnd[_token];
+        Details memory _auction = auctions[auctionIndex[_token]];
+        return _auction.auctionEnd;
     }
 
     /**
@@ -125,7 +163,16 @@ contract Auction {
     *@param _token the unique tokenId
     */
     function getEnded(uint _token) public constant returns(bool){
-        return ended[_token];
+        Details memory _auction = auctions[auctionIndex[_token]];
+        return _auction.ended;
+    }
+
+    /**
+    *@dev allows parties to query how many auctions are ongoing
+    *@param _token the unique tokenId
+    */
+    function getNumberofAuctions() public constant returns(uint){
+        return auctions.length;
     }
     /*
     *@dev allows the owner to set the address of the PhotoCoin token

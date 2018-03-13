@@ -29,9 +29,6 @@ contract PhotoMarket{
     uint[] public forSale;
     //Index telling where a specific tokenId is in the forSale array
     mapping(uint256 => uint256) forSaleIndex;
-
-
-
     //Maps a tokenId to a specific Lease Order (owner/price)
     mapping(uint256 => Order) public leases;
     //Shows which tokens a party has bought rights for
@@ -44,7 +41,6 @@ contract PhotoMarket{
     mapping(uint256 => uint256) forLeaseIndex;
     //Index telling if a tokenId is listed
     mapping(uint256 => bool) forLeaseListed;
-
     //A list of the blacklisted addresses
     mapping(address => bool) blacklist;
 

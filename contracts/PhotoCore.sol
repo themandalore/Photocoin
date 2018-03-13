@@ -7,7 +7,7 @@ import "./PhotoBase.sol";
 * Front contract for Photocoin. Holds uploadPhoto funtionality and token name and symbol
 */
 contract PhotoCore is PhotoBase{
-    // @notice Name and symbol of the non fungible token, as defined in ERC721.
+    // @notice Name and symbol of the non fungible token
     string public name = "PhotoCoin";
     string public symbol = "PC";
 

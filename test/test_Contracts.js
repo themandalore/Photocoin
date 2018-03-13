@@ -29,7 +29,6 @@ contract('Contracts', function(accounts) {
      	assert(await core.supportsInterface("0x6f909ce0"),true,"ERC721 Interface should be supported");
      	assert(await core.supportsInterface("0x01ffc9a7"),true,"ERC165 Interface should be supported");
    });
-
 	it('Upload Photo Test', async function () {
   		await core.uploadPhoto(web3.sha3("PrettyFlowers.jpeg"),"Pretty Flowers","David",0,accounts[0]);
   		await core.uploadPhoto(web3.sha3("Prettygirls.jpeg"),"Pretty girls","Nick",1,accounts[1]);
@@ -71,6 +70,7 @@ contract('Contracts', function(accounts) {
 	  	await auction.bid(0,{value: web3.toWei(5,'ether'), from: accounts[3]});
 	  	var balance2_2= eval(await (web3.fromWei(web3.eth.getBalance(accounts[2]), 'ether').toFixed(0)));
 	  	assert(balance2 == balance2_2 + 4, "Account 2 should be have money held by auction contract");
+	  	assert.equal(await auction.getEnded(0),false,"The auction should be ended");
 	  	await auction.withdraw({from: accounts[2]});
 	  	var balance2_2= eval(await (web3.fromWei(web3.eth.getBalance(accounts[2]), 'ether').toFixed(0)));
 	  	assert(balance2 == balance2_2, "Account 2 should have no change in ether");

@@ -6,9 +6,10 @@
 
 # Contracts
 
-There are two contracts deployed:
+There are three contracts deployed:
 1. The token contract (PhotoCore.sol)
 2. The marketplace contract (PhotoMarket.sol)
+3. The auction contract (Auction.sol)
 
 
 ## The PC Token
@@ -17,7 +18,7 @@ There are two contracts deployed:
 
 #### General
 
-There are four contracts that have inherit relationships leading to the CP Token
+There are four contracts that have inherit relationships leading to the PC Token
 
 SafeMath -> ERC721 -> PhotoBase -> PhotoCore
 
@@ -45,6 +46,7 @@ Each tokenized photograph has 5 params to specify itself.
       symbol
       owner 
       marketContract
+      auctionContract
       totalTokens
 ```
 
@@ -56,6 +58,11 @@ Each tokenized photograph has 5 params to specify itself.
       PhotoBase.sol
         getPhoto
         transferFrom
+        setAuction
+        setMarket
+        setWhitelist
+        isWhitelist
+        setOwner
       ERC721.sol
         transferFrom
         transferFrom(w/bytes as message)
@@ -78,7 +85,7 @@ Each tokenized photograph has 5 params to specify itself.
 ```    
   * Upload Photo
 ```
-    uploadPhoto(0x38d09,"Aardvarks","Dave Tera",10);
+    uploadPhoto(web3.sha3("PrettyFlowers.jpeg"),"Pretty Flowers","David",1862856);
 ```
   * Get Photo Info using its ID
 ```    
@@ -92,16 +99,16 @@ Each tokenized photograph has 5 params to specify itself.
 ```
     totalSupply();
 ```
-  * Transfers the ownership of a photo from one address to another address
+  * Transfers the ownership of a photo token from one address to another address
 ```
     transferFrom("0x0d7EFfEFdB084DfEB1621348c8C70cc4e871Eba4", "0x0d7EFfEFdB084DfEB1621348c8C70cc4e871Eba5",1); 
     //Assuming you own the token and are either the first (_from) address or approved to do so.
 ```
-  * Get TokenID of photos owned by owner
+  * Get TokenID of photo tokens owned by owner
 ```    
     tokensOf("0x0d7EFfEFdB084DfEB1621348c8C70cc4e871Eba4");
 ```
-  * Get detail info of photos from tokenID
+  * Get detail info of photo tokens from tokenID
 ```    
     getPhoto(1);
 ```
