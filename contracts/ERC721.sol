@@ -5,7 +5,7 @@ import "./library/SafeMath.sol";
 /**
  * @title ERC721Token
  * Implementation for the required functionality of the ERC721 standard
- * www.erc721.org
+ * www.erc721.org as of 3/5/2018
  */
 contract ERC721 {
   using SafeMath for uint256;

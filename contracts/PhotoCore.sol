@@ -4,7 +4,7 @@ import "./PhotoBase.sol";
 
 /**
 *@title PhotoCore
-* Front contract for Photocoin. Holds create pet funtionality and token name and symbol
+* Front contract for Photocoin. Holds uploadPhoto funtionality and token name and symbol
 */
 contract PhotoCore is PhotoBase{
     // @notice Name and symbol of the non fungible token, as defined in ERC721.

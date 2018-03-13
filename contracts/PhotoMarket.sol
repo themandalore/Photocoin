@@ -167,6 +167,7 @@ contract PhotoMarket{
     *@dev buyLease allows a party to send Ether to buy a photo off of the lease orderbook
     *@param _tokenId uint256 ID of photo
     *@Note currently this does not unlist the product; as multiple parties can pay the fee to use the rights
+    *@Note there is only one kind of lease and a party can buy as many as they want
     */
     function buyLease(uint256 _tokenId) external payable {
         Order memory _order = leases[_tokenId];
@@ -180,8 +181,10 @@ contract PhotoMarket{
     }
 
     /*
-    *@dev getOrder lists the price and maker of a specific token
+    *@dev getOrder lists the price and maker of a specific token for a sale
     *@param _tokenId uint256 ID of photo
+    *@return address of the party selling the rights to the photo
+    *@return uint of the price of the sale
     */
     function getOrder(uint256 _tokenId) external view returns(address,uint){
         Order storage _order = orders[_tokenId];
@@ -189,18 +192,31 @@ contract PhotoMarket{
     }
 
     /*
-    *@dev getOrder lists the price and maker of a specific token
+    *@dev getLeases lists the price and maker of a specific token for a Lease
     *@param _tokenId uint256 ID of photo
+    *@return address of the party leasing the rights to the photo
+    *@return uint of the price of the lease
     */
     function getLeases(uint256 _tokenId) external view returns(address,uint){
         Order storage _order = leases[_tokenId];
         return (_order.maker,_order.price);
     }
 
+    /*
+    *@dev getLeasesbyOwner lists all tokens leased by an address
+    *@param _party is the address of the party  you are querying 
+    *@return uint[] of tokenIds leased by party
+    *@Note - does not include tokens the party owns. 
+    */
     function getLeasebyOwner(address _party) external view returns(uint[]){
         return leasesOwned[_party];
     }
 
+    /*
+    *@dev getTokenLeases gives you all addresses that have leased a token
+    *@param _tokenId uint256 ID of photo
+    *@return address[] of all addresses that have leased a specific token
+    */
     function getTokenLeases(uint256 _tokenId) external view returns(address[]){
         return tokenLeases[_tokenId];
     }
@@ -226,6 +242,7 @@ contract PhotoMarket{
     *@dev Allows the owner to blacklist addresses from using this exchange
     *@param _address the address of the party to blacklist
     *@param _motion true or false depending on if blacklisting or not
+    *@Note - This allows the owner to stop a malicious party from spamming the orderbook
     */
     function blacklistParty(address _address, bool _motion) public onlyOwner() {
         blacklist[_address] = _motion;
@@ -234,17 +251,26 @@ contract PhotoMarket{
     /*
     *@dev Allows parties to see if one is blacklisted
     *@param _address the address of the party to blacklist
+    *@return bool, true for is blacklisted
     */
     function isBlacklist(address _address) public view returns(bool) {
         return blacklist[_address];
     }
 
     /*
-    *@dev getExcrow allows parties to see how much a specific party has in Escrow
+    *@dev getOrderCount allows parties to query how many orders are on the book
     *@return _uint of the number of orders in the orderbook
     */
     function getOrderCount() public constant returns(uint) {
         return forSale.length;
+    }
+
+    /*
+    *@dev getLeaseCount allows parties to query how many leases are on the book
+    *@return _uint of the number of orders in the lease orderbook
+    */
+    function getLeaseCount() public constant returns(uint) {
+        return forLease.length;
     }
 
     /*

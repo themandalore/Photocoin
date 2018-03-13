@@ -71,8 +71,9 @@ contract PhotoBase is ERC721{
 
 
     /**
-    *@dev allows the owner to set the official marketplace of the token
+    *@dev allows users to query whether an address is whitelisted
     *@param _user is the user to allow to trade
+    *@return bool is whether a user is allowed to trade
     */
     function isWhitelist(address _user) public view returns(bool){
         return whitelist[_user];
@@ -92,7 +93,7 @@ contract PhotoBase is ERC721{
     }
 
   /**
-   * @dev This overwrites the transferFrom function to allow the market contract to interact
+   * @dev This overwrites the transferFrom function to allow the market/auction contract to interact
    * @param _from is the address that the token will be sent from
    * @param _to is the address we are sending the token to
    * @param _tokenId the numeric identifier of a token
