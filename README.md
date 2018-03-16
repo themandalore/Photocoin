@@ -304,6 +304,49 @@ Additional mappings enable us to look at details
 ```
   * The owner can now withdraw funds like any other contract participant
 
+### App (localhost) Setup:
+
+
+In one terminal:
+```
+ganache-cli -m document crisp glide lava weasel tiger debate wasp chair remain ritual rubber
+
+//Note if you don't use the specific mnemonic, you will need to change the account[0] variable in the create_photos.js script.
+```
+
+
+In a separate terminal:
+
+```
+cd C:/..../Photocoin
+truffle compile
+truffle migrate
+```
+
+In third terminal:
+```
+cd C:/..../Photocoin
+npm run start
+```
+
+This should start the app at http://localhost:3000/
+Change your metamask network to localhost:8545
+
+In the folder scripts, go to the create_photos.js
+
+```
+For myaddress1 and myaddress2, put in your metamask addresses that you want to use to interact with the contracts (we will send them local Ether and Photocoins)
+
+For account0, cut and paste the first available account from ganache-cli ( e.g. (0) 0x7188f2d5808a3a0dc9d78cd31eb02223dbb58fb8)
+```
+
+Now in the second terminal, run:
+
+```
+truffle exec scripts/create_photos.js
+```
+
+Now your myaddress1 has phots 0,1 and 2 and both of your accounts have 10 ether.  Test out the buttons that they call metamask!
 
 #### Notes:
 

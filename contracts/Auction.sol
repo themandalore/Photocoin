@@ -118,7 +118,7 @@ contract Auction {
     function endAuction(uint _token) public {
         Details memory _auction = auctions[auctionIndex[_token]];
         require(now > _auction.auctionEnd);
-        require(_auction.ended = false);
+        require(_auction.ended == false);
         auctions[auctionIndex[_token]] = Details({
             tokenId: _token,
             highestBidder: _auction.highestBidder,
