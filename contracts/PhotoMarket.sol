@@ -197,7 +197,6 @@ contract PhotoMarket{
         Order storage _order = leases[_tokenId];
         return (_order.maker,_order.price);
     }
-
     /*
     *@dev getLeasesbyOwner lists all tokens leased by an address
     *@param _party is the address of the party  you are querying 

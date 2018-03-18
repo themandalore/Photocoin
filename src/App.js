@@ -2,7 +2,7 @@
 import React, { Component } from 'react'
 import PhotoMarket from '../build/contracts/PhotoMarket.json'
 import PhotoCore from '../build/contracts/PhotoCore.json'
-import Auction from '../build/contracts/Auction.json'
+import Auction from '../build/contracts/testAuction.json'
 import getWeb3 from './utils/getWeb3'
 //import Lightbox from 'react-images';
 
@@ -25,10 +25,30 @@ class App extends Component {
       myTokens :[],
       orderbook: [],
       leasebook: [],
-      auctionbook: []
+      auctionbook: [],
+      currentBlock: 0,
+      auction_address:"",
+      market_address:"",
+      duration:0
     }
   }
 
+
+
+  instantiateContract() {
+    this.state.web3.eth.getAccounts((error, accounts) => {
+        this.setState({ storageValue: accounts[0]})
+        this.getBlock();
+    })
+    
+  }
+
+  getBlock(){
+    let currentComponent = this;
+    this.state.web3.eth.getBlock('latest', function (e, res) {
+      currentComponent.setState({ currentBlock: res.number})
+  })
+  }
   componentWillMount() {
     getWeb3
     .then(results => {
@@ -38,10 +58,36 @@ class App extends Component {
       this.instantiateContract()
       this.getmyTokens()
       this.getOwner()
+      this.getAuctionBook()
+      this.getOrderbook()
+      this.getLeaseBook()
     })
     .catch(() => {
       console.log('Error finding web3.')
     })
+  }
+
+  eventWatcher(){
+    const contract = require('truffle-contract')
+    const photoMarket= contract(PhotoMarket)
+    photoMarket.setProvider(this.state.web3.currentProvider)
+    photoMarket.deployed().then((instance)=>{
+    let events = instance.OrderPlaced({}, {fromBlock:this.state.currentBlock, toBlock: 'latest'})
+
+    events.watch((err: any, event: any) => {
+        if (err) {
+            console.log(err)
+        }
+        else {
+          this.getmyTokens();
+          this.getOrderbook();
+          this.getAuctionBook();
+          this.getLeaseBook();
+          this.getBlock();
+          
+        }
+    })
+  })
   }
 
   getOwner(){
@@ -54,17 +100,25 @@ class App extends Component {
             currentComponent.setState({ owner: result})
                 var i = currentComponent.state.owner;
                 var j =currentComponent.state.storageValue;
-                console.log("test",i,j)
                 if(i === j){
-                    currentComponent.setState({auctionButton :(<p><button onClick={this.buyClick.bind(this)}>List for Auction</button></p>)});
+                    currentComponent.setState({auctionButton :(<p><button onClick={this.setAuction.bind(this)}>List for Auction</button></p>)});
                 }
                 else{
                    currentComponent.setState({auctionButton:(<p><button disabled>List for Auction</button></p>)});
                 }
           })
       })
-    console.log('ab',this.auctionButton);
-
+    const auction = contract(Auction)
+    auction.setProvider(this.state.web3.currentProvider)
+    auction.deployed().then((instance)=>{
+      currentComponent.setState({ auction_address : instance.contract.address});
+    })
+    
+    const market = contract(PhotoMarket)
+    market.setProvider(this.state.web3.currentProvider)
+    market.deployed().then((instance)=>{
+      currentComponent.setState({ market_address : instance.contract.address});
+    })
   }
 
   getmyTokens(){
@@ -73,12 +127,10 @@ class App extends Component {
     const photoCore = contract(PhotoCore)
     var add = currentComponent.state.storageValue;
     var tokens = []
-    console.log('add',add)
     this.state.web3.eth.getAccounts((error, accounts) => {
       photoCore.setProvider(this.state.web3.currentProvider)
       photoCore.deployed().then((instance)=>{
           instance.tokensOf(accounts[0]).then(function(result){
-            console.log(result);
             for(var i=0;i<result.length;i++){
               tokens.push('-')
               tokens.push(result[i].toNumber())
@@ -94,74 +146,52 @@ class App extends Component {
     let currentComponent = this;
     const contract = require('truffle-contract')
     const photoCore = contract(PhotoCore)
+    var tokens = []
     photoCore.setProvider(this.state.web3.currentProvider)
       photoCore.deployed().then((instance)=>{
-          instance.owner.call().then(function(result){
-            currentComponent.setState({ owner: result})
-                var i = currentComponent.state.owner;
-                var j =currentComponent.state.storageValue;
-                console.log("test",i,j)
-                if(i === j){
-                    currentComponent.setState({auctionButton :(<p><button onClick={this.buyClick.bind(this)}>List for Auction</button></p>)});
-                }
-                else{
-                   currentComponent.setState({auctionButton:(<p><button disabled>List for Auction</button></p>)});
-                }
+          instance.tokensOf(currentComponent.state.market_address).then(function(result){
+            for(var i=0;i<result.length;i++){
+              tokens.push('-')
+              tokens.push(result[i].toNumber())
+            }
+            currentComponent.setState({ orderbook: tokens})
           })
-      })
-    console.log('ab',this.auctionButton);
+    })
   }
 
   getLeaseBook(){
     let currentComponent = this;
     const contract = require('truffle-contract')
-    const photoCore = contract(PhotoCore)
-    photoCore.setProvider(this.state.web3.currentProvider)
-      photoCore.deployed().then((instance)=>{
-          instance.owner.call().then(function(result){
-            currentComponent.setState({ owner: result})
-                var i = currentComponent.state.owner;
-                var j =currentComponent.state.storageValue;
-                console.log("test",i,j)
-                if(i === j){
-                    currentComponent.setState({auctionButton :(<p><button onClick={this.buyClick.bind(this)}>List for Auction</button></p>)});
-                }
-                else{
-                   currentComponent.setState({auctionButton:(<p><button disabled>List for Auction</button></p>)});
-                }
+    const photoMarket = contract(PhotoMarket)
+    var tokens = []
+    photoMarket.setProvider(this.state.web3.currentProvider)
+      photoMarket.deployed().then((instance)=>{
+          instance.getLeaseCount().then(function(result){
+            console.log('Number of Leases:',result);
+            for(var i =0;i < result;i++){
+              instance.forLease.call(i).then(function(res){
+                tokens.push(res);
+              })
+            }
           })
+          currentComponent.setState({ leasebook: tokens})
       })
-    console.log('ab',this.auctionButton);
   }
 
   getAuctionBook(){
     let currentComponent = this;
     const contract = require('truffle-contract')
     const photoCore = contract(PhotoCore)
+    var tokens = []
     photoCore.setProvider(this.state.web3.currentProvider)
       photoCore.deployed().then((instance)=>{
-          instance.owner.call().then(function(result){
-            currentComponent.setState({ owner: result})
-                var i = currentComponent.state.owner;
-                var j =currentComponent.state.storageValue;
-                console.log("test",i,j)
-                if(i === j){
-                    currentComponent.setState({auctionButton :(<p><button onClick={this.buyClick.bind(this)}>List for Auction</button></p>)});
-                }
-                else{
-                   currentComponent.setState({auctionButton:(<p><button disabled>List for Auction</button></p>)});
-                }
+          instance.tokensOf(currentComponent.state.auction_address).then(function(result){
+            for(var i=0;i<result.length;i++){
+              tokens.push('-')
+              tokens.push(result[i].toNumber())
+            }
+            currentComponent.setState({ auctionbook: tokens})
           })
-      })
-    console.log('ab',this.auctionButton);
-  }
-
-
-  instantiateContract() {
-    // Get accounts.
-    this.state.web3.eth.getAccounts((error, accounts) => {
-        // Update state with the result.
-        this.setState({ storageValue: accounts[0]})
     })
   }
 
@@ -169,12 +199,9 @@ class App extends Component {
     const contract = require('truffle-contract')
     const photoMarket = contract(PhotoMarket)
     photoMarket.setProvider(this.state.web3.currentProvider)
-    console.log(this.state.web3.currentProvider)
     var price = this.state.price
-    console.log("Buy Sent");
     this.state.web3.eth.getAccounts((error, accounts) => {
       photoMarket.deployed().then((instance) => {
-      console.log(instance.address);
       return instance.buyPhoto(this.state.tokenId, {from: accounts[0], value:price*1e18,gas:2000000})
       })
     })
@@ -187,10 +214,9 @@ class App extends Component {
     photoMarket.setProvider(this.state.web3.currentProvider)
     var _tokenId = this.state.tokenId 
     var price = this.state.price
-    console.log("List Sent", _tokenId , price);
     this.state.web3.eth.getAccounts((error, accounts) => {
       photoMarket.deployed().then((instance) => {
-      console.log(instance.address);
+      this.eventWatcher()
       return instance.listPhoto(this.state.tokenId,price * 1e18,{from: accounts[0]})
       })
     })
@@ -201,14 +227,100 @@ class App extends Component {
     const photoMarket = contract(PhotoMarket)
     photoMarket.setProvider(this.state.web3.currentProvider)
     var _tokenId = this.state.tokenId 
-    console.log("Unlist Sent");
     this.state.web3.eth.getAccounts((error, accounts) => {
       photoMarket.deployed().then((instance) => {
-      console.log(instance.address);
       return instance.unlistPhoto(_tokenId,{from: accounts[0]})
       })
     })
   }
+  leaseClick() {
+    const contract = require('truffle-contract')
+    const photoMarket = contract(PhotoMarket)
+    photoMarket.setProvider(this.state.web3.currentProvider)
+    var _tokenId = this.state.tokenId 
+    var price = this.state.price
+    this.state.web3.eth.getAccounts((error, accounts) => {
+      photoMarket.deployed().then((instance) => {
+      this.eventWatcher()
+      return instance.buyLease(this.state.tokenId,{value:price * 1e18,from: accounts[0]})
+      })
+    })
+  }
+
+  listLeaseClick() {
+    const contract = require('truffle-contract')
+    const photoMarket = contract(PhotoMarket)
+    photoMarket.setProvider(this.state.web3.currentProvider)
+    var _tokenId = this.state.tokenId 
+    var price = this.state.price
+    this.state.web3.eth.getAccounts((error, accounts) => {
+      photoMarket.deployed().then((instance) => {
+      this.eventWatcher()
+      return instance.listLease(this.state.tokenId,price * 1e18,{from: accounts[0]})
+      })
+    })
+  }
+
+  unlistLeaseClick() {
+    const contract = require('truffle-contract')
+    const photoMarket = contract(PhotoMarket)
+    photoMarket.setProvider(this.state.web3.currentProvider)
+    var _tokenId = this.state.tokenId 
+    this.state.web3.eth.getAccounts((error, accounts) => {
+      photoMarket.deployed().then((instance) => {
+      return instance.unlistLease(_tokenId,{from: accounts[0]})
+      })
+    })
+  }
+
+  setAuction() {
+    const contract = require('truffle-contract')
+    const auction = contract(Auction)
+    auction.setProvider(this.state.web3.currentProvider)
+    var price = this.state.price
+    this.state.web3.eth.getAccounts((error, accounts) => {
+      auction.deployed().then((instance) => {
+      return instance.setAuction(this.state.duration * 86400,this.state.tokenId, {from: accounts[0]})
+      })
+    })
+  }
+
+  uploadClick() {
+  }
+  bidAuction() {
+    const contract = require('truffle-contract')
+    const auction = contract(Auction)
+    auction.setProvider(this.state.web3.currentProvider)
+    var price = this.state.price
+    this.state.web3.eth.getAccounts((error, accounts) => {
+      auction.deployed().then((instance) => {
+      return instance.bid(this.state.tokenId, {value:price * 1e18,from: accounts[0]})
+      })
+    })
+  }
+  closeAuction(){
+    const contract = require('truffle-contract')
+    const auction = contract(Auction)
+    auction.setProvider(this.state.web3.currentProvider)
+    var price = this.state.price
+    this.state.web3.eth.getAccounts((error, accounts) => {
+      auction.deployed().then((instance) => {
+      return instance.endAuction(this.state.tokenId,{from: accounts[0]})
+      })
+    })
+  }
+  withdrawAuction(){
+    const contract = require('truffle-contract')
+    const auction = contract(Auction)
+    auction.setProvider(this.state.web3.currentProvider)
+    var price = this.state.price
+    this.state.web3.eth.getAccounts((error, accounts) => {
+      auction.deployed().then((instance) => {
+      return instance.withdraw({from: accounts[0]})
+      })
+    })
+  }
+
   handleChange(evt) {
       const tokenId  = (evt.target.validity.valid) ? evt.target.value : this.state.tokenId ;
       this.setState({ tokenId });
@@ -240,10 +352,12 @@ class App extends Component {
                 <p><button onClick={this.listClick.bind(this)}>List</button></p>
                 <p><button onClick={this.buyClick.bind(this)}>Buy</button></p>
                 <p><button onClick={this.unlistClick.bind(this)}>Unlist</button></p>
-                <p><button onClick={this.listClick.bind(this)}>List for Lease</button></p>
-                <p><button onClick={this.buyClick.bind(this)}>Lease Token</button></p>
+                <p><button onClick={this.listLeaseClick.bind(this)}>List for Lease</button></p>
+                <p><button onClick={this.unlistLeaseClick.bind(this)}>Unlist Lease</button></p>
+                <p><button onClick={this.leaseClick.bind(this)}>Lease Token</button></p>
                 {this.state.auctionButton}
-                <p><button onClick={this.buyClick.bind(this)}>Upload Photo</button></p>
+                <p><input type="text" pattern="[0-9]*" onInput={this.handleChange.bind(this)} value={this.state.duration} />duration (days)</p>
+                <p><button onClick={this.uploadClick.bind(this)}>Upload Photo</button></p>
                 <div>
                   <p>My Photos: {this.state.myTokens}</p>
                     {/*<Lightbox
@@ -254,8 +368,8 @@ class App extends Component {
                       onClose={this.closeLightbox}
                     />*/}
                   <p>For Sale Orderbook: {this.state.orderbook}</p>
-                  <p>For Lease Orderbook: {this.state.orderbook}</p>
-                  <p>Auction House: {this.state.orderbook}</p>
+                  <p>For Lease Orderbook: {this.state.leasebook}</p>
+                  <p>Auction House: {this.state.auctionbook}</p>
                 </div>
             </div>
           </div>
