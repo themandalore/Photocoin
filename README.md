@@ -337,7 +337,6 @@ In the folder scripts, go to the create_photos.js
 ```
 For myaddress1 and myaddress2, put in your metamask addresses that you want to use to interact with the contracts (we will send them local Ether and Photocoins)
 
-For account0, cut and paste the first available account from ganache-cli ( e.g. (0) 0x7188f2d5808a3a0dc9d78cd31eb02223dbb58fb8)
 ```
 
 Now in the second terminal, run:
