@@ -4,7 +4,7 @@ var testAuction = artifacts.require("testAuction");
 
 
 var myAddress1 = "0x0d7EFfEFdB084DfEB1621348c8C70cc4e871Eba4";
-var myAddress2 = "0x92683a09B64148369b09f96350B6323D37Af6AE3";
+var myAddress2 = "0x92683a09b64148369b09f96350b6323d37af6ae3";
 var account0 = "0x79b4b3c09897e05027cdecd9cbddcb2cd5492638";
 module.exports =async function(accounts) {
 	market = await PhotoMarket.deployed();

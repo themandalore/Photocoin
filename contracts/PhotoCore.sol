@@ -31,7 +31,7 @@ contract PhotoCore is PhotoBase{
     /**
     *@dev this function changes whether or not uploads are allowed by people other than the owner
     */
-    function setAllowUploads() onlyOwner(){
+    function setAllowUploads() public onlyOwner(){
         allowUploads = (!allowUploads);
     }
 

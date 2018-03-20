@@ -7,7 +7,7 @@ module.exports =async function(accounts) {
 	market = await PhotoMarket.deployed();
     core =await PhotoCore.deployed();
     auction = await testAuction.deployed();
-	/* core.uploadPhoto(web3.sha3("PrettyFlowers.jpeg"),"Pretty Flowers","David",100,account0);
+	core.uploadPhoto(web3.sha3("PrettyFlowers.jpeg"),"Pretty Flowers","David",100,account0);
 	await core.uploadPhoto(web3.sha3("Prettygirls.jpeg"),"Pretty girls","Nick",101,account0);
 	await core.uploadPhoto(web3.sha3("MonaLisa.jpeg"),"Mona Lisa","Leo",102,account0);
 	await core.uploadPhoto(web3.sha3("CafeTerraceatNight.jpeg"),"Cafe Terrace at Night","Vince",103,account0);
@@ -21,7 +21,7 @@ module.exports =async function(accounts) {
 	for(var i=0;i<Tokens.length;i++){
 		await auction.setAuction(86400*14,Tokens[i]);
 		console.log(Tokens[i],' now up for auction');
-	}*/
+	}
 	await core.uploadPhoto(web3.sha3("Themata.jpeg"),"Themata","Karnivool",108,account0);
 	await core.uploadPhoto(web3.sha3("Andromeda.jpeg"),"Andromeda","Sithu Aye",109,account0);
 	Tokens = await core.tokensOf(account0);

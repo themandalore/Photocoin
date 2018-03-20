@@ -24,6 +24,7 @@ contract PhotoBase is ERC721{
     /*** STORAGE ***/
     mapping(uint256 => Photo) photos;//A mapping from photoId to the details of the photo
     mapping(address => bool) whitelist;// A list of addresses approved to trade
+    bool public whitelistOn;
 
     /***MODIFIERS***/
     /// @dev Access modifier for Owner functionality
@@ -79,6 +80,14 @@ contract PhotoBase is ERC721{
         return whitelist[_user];
     }
 
+        /**
+    *@dev allows users to query whether parties need to be whitelisted
+    */
+    function toggleWhitelist() public onlyOwner() returns(bool){
+        whitelistOn = !whitelistOn;
+        return whitelistOn;
+    }
+
     /**
     *@dev allows for the details of the photo to be viewed
     *@param _tokenId is the address of the new owner
@@ -100,7 +109,7 @@ contract PhotoBase is ERC721{
   */
   function transferFrom(address _from, address _to, uint256 _tokenId)  public{
     require(msg.sender == owner || isApproved(msg.sender,_from) || isApproved(msg.sender,_from,_tokenId) || ownerOf(_tokenId)==msg.sender || msg.sender==marketContract || msg.sender==auctionContract);
-    require(whitelist[_to] == true);
+    require(!whitelistOn || whitelist[_to] == true);
     clearApprovalAndTransfer(_from,_to,_tokenId);
   }
 }

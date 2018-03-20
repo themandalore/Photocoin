@@ -153,7 +153,7 @@ contract PhotoMarket{
     function unlistLease(uint256 _tokenId) external{
         require(forLeaseIndex[_tokenId] > 0);
         Order memory _order = leases[_tokenId];
-        require(msg.sender== _order.maker || msg.sender == owner);
+        require(token.ownerOf(_tokenId) == msg.sender || msg.sender == owner);
         unLeaster(_tokenId);
         LeaseOrderRemoved(_tokenId);
         forLeaseListed[_tokenId] = false;
