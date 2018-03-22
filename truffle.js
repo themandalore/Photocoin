@@ -1,7 +1,7 @@
 var HDWalletProvider = require("truffle-hdwallet-provider");
 var DefaultBuilder = require("truffle-default-builder");
 
-var mnemonic = "other tray hint valid buyer fiscal patch fly damp ocean produce wish";
+var mnemonic = "document crisp glide lava weasel tiger debate wasp chair remain ritual rubber";
 
 module.exports = {
    /*build: new DefaultBuilder({

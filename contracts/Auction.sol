@@ -1,8 +1,10 @@
 pragma solidity ^0.4.18;
 
 import "./PhotoCore.sol";
+ import "./library/SafeMath.sol";
 
 contract Auction {
+    using SafeMath for uint256;
     /***VARIABLES***/
     address public owner; //owner of the contracts
     PhotoCore token; //The PhotoCore contract for linking to the Photocoin token
@@ -126,6 +128,7 @@ contract Auction {
             ended: true,
             auctionEnd: _auction.auctionEnd
         });
+        unLister(_token);
         AuctionEnded(_token,_auction.highestBidder,_auction.highestBid);
         token.transferFrom(address(this),_auction.highestBidder, _token);
         pendingReturns[owner] += _auction.highestBid;
@@ -157,16 +160,6 @@ contract Auction {
         Details memory _auction = auctions[auctionIndex[_token]];
         return _auction.auctionEnd;
     }
-
-    /**
-    *@dev allows parties to query if an auction has ended
-    *@param _token the unique tokenId
-    */
-    function getEnded(uint _token) public constant returns(bool){
-        Details memory _auction = auctions[auctionIndex[_token]];
-        return _auction.ended;
-    }
-
     /**
     *@dev allows parties to query how many auctions are ongoing
     *@param _token the unique tokenId
@@ -187,5 +180,14 @@ contract Auction {
     */
     function setOwner(address _owner) public onlyOwner() {
         owner = _owner;
+    }
+
+    function unLister(uint256 _tokenId) internal{
+        uint256 tokenIndex = auctionIndex[_tokenId];
+        uint256 lastTokenIndex = auctions.length.sub(1);
+        Details memory lastToken = auctions[auctionIndex[lastTokenIndex]];
+        auctions[tokenIndex] = lastToken;
+        auctions.length--;
+        auctionIndex[_tokenId] = 0;
     }
 }

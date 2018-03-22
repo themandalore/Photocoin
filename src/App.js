@@ -13,7 +13,8 @@ import './App.css'
 
 class App extends Component {
   constructor(props) {
-    super(props)
+    super(props);
+    this.handleChange = this.handleChange.bind(this);
     this.state = {
       storageValue: "",
       web3: null,
@@ -228,6 +229,7 @@ class App extends Component {
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.state.photoMarket.deployed().then((instance) => {
       this.eventWatcher()
+      console.log(this.state.tokenId,price)
       return instance.buyPhoto(this.state.tokenId,{from: accounts[0], value:price*1e18,gas:2000000})
       })
     })
@@ -298,9 +300,9 @@ class App extends Component {
 
   uploadClick() {
     //Need to add logic to actually save the picture
-    this.state.photoMarket.setProvider(this.state.web3.currentProvider)
+    this.state.photoCore.setProvider(this.state.web3.currentProvider)
     this.state.web3.eth.getAccounts((error, accounts) => {
-      this.state.photoMarket.deployed().then((instance) => {
+      this.state.photoCore.deployed().then((instance) => {
       this.eventWatcher()
       return instance.uploadPhoto(this.state.web3.sha3(this.state.photoHash),this.state.name,this.state.photographer,this.state.isenNumber,this.state.photoOwner,{from: accounts[0]})
       })
@@ -317,7 +319,7 @@ class App extends Component {
     })
   }
   closeAuction(){
-    this.state.uction.setProvider(this.state.web3.currentProvider)
+    this.state.auction.setProvider(this.state.web3.currentProvider)
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.state.auction.deployed().then((instance) => {
         this.eventWatcher()
@@ -335,9 +337,7 @@ class App extends Component {
   }
 
     handleChange(e) {
-        let formData = Object.assign({}, this.state.formData);
-        formData[e.target.name] = e.target.value;
-        this.setState({formData})
+        this.setState({[e.target.name]: e.target.value});
     }
 
   render() {
@@ -355,8 +355,8 @@ class App extends Component {
               <p>Your Metamask address is: {this.state.storageValue}</p>
               <p>The owner of the contract is: {this.state.owner}</p>
               <h2>Market Functionality</h2>
-                <p>Token ID:&nbsp;<input type="text" name="tokenId" pattern="[0-9]*" onInput={this.handleChange.bind(this)}/></p>
-                <p>Price:&nbsp;<input type="text" name="price" pattern="[0-9]*" onInput={this.handleChange.bind(this)}/></p>
+                <p>Token ID:&nbsp;<input type="text" name="tokenId" pattern="[0-9]*" onInput={this.handleChange}/></p>
+                <p>Price:&nbsp;<input type="text" name="price" pattern="[0-9]*" onInput={this.handleChange}/></p>
                 <p><button onClick={this.listClick.bind(this)}>List</button>&nbsp;
                  <button onClick={this.buyClick.bind(this)}>Buy</button>&nbsp;
                  <button onClick={this.unlistClick.bind(this)}>Unlist</button></p>
@@ -365,16 +365,16 @@ class App extends Component {
                  <button onClick={this.leaseClick.bind(this)}>Lease Token</button></p>
                  <h2>Auction Functionality</h2>
                 {this.state.auctionButton}
-                <p>Duration:&nbsp; <input type="text" name="duration" pattern="[0-9]*" onInput={this.handleChange.bind(this)}/>&nbsp;(days)</p>
+                <p>Duration:&nbsp; <input type="text" name="duration" pattern="[0-9]*" onInput={this.handleChange}/>&nbsp;(days)</p>
                 <p><button onClick={this.bidAuction.bind(this)}>Bid</button>&nbsp;
                 <button onClick={this.withdrawAuction.bind(this)}>Withdraw</button>&nbsp;
                 <button onClick={this.closeAuction.bind(this)}>End Auction</button></p>
                 <h2>Upload a Photo</h2>
-                <p>Photo:&nbsp; <input type="file" name="photoHash" onInput={this.handleChange.bind(this)}/></p>
-                <p>Photo Name:&nbsp; <input type="text" name="name" onInput={this.handleChange.bind(this)}/></p>
-                <p>Photographer:&nbsp; <input type="text" name="photographer" onInput={this.handleChange.bind(this)}/></p>
-                <p>ISEN Number:&nbsp; <input type="text" pattern="[0-9]*" name="isenNumber" onInput={this.handleChange.bind(this)}/></p>
-                <p>Owner:&nbsp;<input type="text" name="photoOwner" onInput={this.handleChange.bind(this)}/></p>
+                <p>Photo:&nbsp; <input type="file" name="photoHash" onInput={this.handleChange}/></p>
+                <p>Photo Name:&nbsp; <input type="text" name="name" onInput={this.handleChange}/></p>
+                <p>Photographer:&nbsp; <input type="text" name="photographer" onInput={this.handleChange}/></p>
+                <p>ISEN Number:&nbsp; <input type="text" pattern="[0-9]*" name="isenNumber" onInput={this.handleChange}/></p>
+                <p>Owner:&nbsp;<input type="text" name="photoOwner" onInput={this.handleChange}/></p>
                 <p><button onClick={this.uploadClick.bind(this)}>Upload Photo</button></p>
                 <div>
                   <h2>My Photos:</h2>

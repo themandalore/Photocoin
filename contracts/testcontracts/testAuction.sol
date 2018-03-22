@@ -1,11 +1,11 @@
-pragma solidity ^0.4.18; 
-
+pragma solidity ^0.4.18;
 /*This is the test auction contract, 
 everything should be the same except time constraints are removed*/
-
 import "../PhotoCore.sol";
+import "../library/SafeMath.sol";
 
 contract testAuction {
+    using SafeMath for uint256;
     /***VARIABLES***/
     address public owner; //owner of the contracts
     PhotoCore token; //The PhotoCore contract for linking to the Photocoin token
@@ -53,7 +53,7 @@ contract testAuction {
         }));
     }
     
-        /*
+    /*
     *@dev The fallback function to prevent money from being sent to the contract
     */
     function()  payable public{
@@ -129,6 +129,7 @@ contract testAuction {
             ended: true,
             auctionEnd: _auction.auctionEnd
         });
+        unLister(_token);
         AuctionEnded(_token,_auction.highestBidder,_auction.highestBid);
         token.transferFrom(address(this),_auction.highestBidder, _token);
         pendingReturns[owner] += _auction.highestBid;
@@ -190,5 +191,14 @@ contract testAuction {
     */
     function setOwner(address _owner) public onlyOwner() {
         owner = _owner;
+    }
+
+    function unLister(uint256 _tokenId) internal{
+        uint256 tokenIndex = auctionIndex[_tokenId];
+        uint256 lastTokenIndex = auctions.length.sub(1);
+        Details memory lastToken = auctions[auctionIndex[lastTokenIndex]];
+        auctions[tokenIndex] = lastToken;
+        auctions.length--;
+        auctionIndex[_tokenId] = 0;
     }
 }

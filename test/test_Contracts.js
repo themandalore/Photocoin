@@ -70,14 +70,13 @@ contract('Contracts', function(accounts) {
 	  	await auction.bid(0,{value: web3.toWei(5,'ether'), from: accounts[3]});
 	  	var balance2_2= eval(await (web3.fromWei(web3.eth.getBalance(accounts[2]), 'ether').toFixed(0)));
 	  	assert(balance2 == balance2_2 + 4, "Account 2 should be have money held by auction contract");
-	  	assert.equal(await auction.getEnded(0),false,"The auction should be ended");
 	  	await auction.withdraw({from: accounts[2]});
 	  	var balance2_2= eval(await (web3.fromWei(web3.eth.getBalance(accounts[2]), 'ether').toFixed(0)));
 	  	assert(balance2 == balance2_2, "Account 2 should have no change in ether");
 	  	assert.equal(await auction.getHighestBidder(0),accounts[3],"Account 3 should be highest bidder");
 	  	assert.equal(await auction.getHighestBid(0),web3.toWei(5,'ether'),"The highest bid should be 5 eth");
 	  	await auction.endAuction(0);
-	  	assert.equal(await auction.getEnded(0),true,"The auction should be ended");
+	  	assert.equal(await auction.auctionIndex.call(0),0,"The auction should be ended");
 	  	await auction.withdraw();
 	  	assert.equal(await core.ownerOf(0),accounts[3],"Account3 should own this token");
 	  	var balance_2= eval(await(web3.fromWei(web3.eth.getBalance(accounts[0]), 'ether').toFixed(0)));
