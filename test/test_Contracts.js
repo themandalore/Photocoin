@@ -22,7 +22,7 @@ contract('Contracts', function(accounts) {
 			await core.setWhitelist(accounts[i],true);
 		}
    })
-	/*it('Setup contract for testing', async function () {
+	it('Setup contract for testing', async function () {
   	assert.equal(await core.marketContract.call(),market.address,"Market contract should be set properly");
 	});
 	it('Interfaces Supported', async function () {
@@ -155,7 +155,7 @@ contract('Contracts', function(accounts) {
 		await market.unlistLease(0,{from:accounts[4]});
 		Order = await market.getLeases(0);
 		assert.equal(Order[1],0,"Lease order should not still be on book");
-	});*/
+	});
 		it('Allow uploads of Photos', async function () {
 		console.log(await core.allowUploads.call());
 		await core.setAllowUploads();

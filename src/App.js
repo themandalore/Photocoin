@@ -79,21 +79,64 @@ class App extends Component {
     })
   }
 
-  eventWatcher(){
-    this.state.photoMarket.setProvider(this.state.web3.currentProvider)
-    this.state.photoMarket.deployed().then((instance)=>{
-    let events = instance.OrderPlaced({}, {fromBlock:this.state.currentBlock, toBlock: 'latest'})
+  reload(){
+       this.getmyTokens();this.getOrderbook();this.getAuctionBook();this.getLeaseBook();this.getBlock();  
+  }
+
+  eventWatcherCore(_event){
+    this.state.photoCore.setProvider(this.state.web3.currentProvider)
+    this.state.photoCore.deployed().then((instance)=>{
+    let events =instance.Upload({}, {fromBlock:this.state.currentBlock, toBlock: 'latest'});
     events.watch((err: any, event: any) => {
         if (err) {
             console.log(err)
         }
         else {
-          this.getmyTokens();
-          this.getOrderbook();
-          this.getAuctionBook();
-          this.getLeaseBook();
-          this.getBlock();
-          
+          this.reload()
+        }
+    })
+  })
+  }
+  eventWatcherAuction(_event){
+    this.state.auction.setProvider(this.state.web3.currentProvider)
+    this.state.auction.deployed().then((instance)=>{
+    console.log(_event);
+    var at = {
+        HighestBidIncreased: instance.HighestBidIncreased({}, {fromBlock:this.state.currentBlock, toBlock: 'latest'}),
+        AuctionEnded: instance.AuctionEnded({}, {fromBlock:this.state.currentBlock, toBlock: 'latest'})
+    };
+
+    let events = at[_event];
+    events.watch((err: any, event: any) => {
+        if (err) {
+            console.log(err)
+        }
+        else {
+          this.reload()
+        }
+    })
+  })
+  }
+  eventWatcherMarket(_event){
+    this.state.photoMarket.setProvider(this.state.web3.currentProvider)
+    this.state.photoMarket.deployed().then((instance)=>{
+    console.log(_event);
+    var at = {
+        OrderPlaced: instance.OrderPlaced({}, {fromBlock:this.state.currentBlock, toBlock: 'latest'}),
+        OrderRemoved: instance.OrderRemoved({}, {fromBlock:this.state.currentBlock, toBlock: 'latest'}),
+        LeaseOrderPlaced: instance.LeaseOrderPlaced({}, {fromBlock:this.state.currentBlock, toBlock: 'latest'}),
+        LeaseOrderRemoved: instance.LeaseOrderRemoved({}, {fromBlock:this.state.currentBlock, toBlock: 'latest'}),
+        Sale: instance.Sale({}, {fromBlock:this.state.currentBlock, toBlock: 'latest'}),
+        Lease: instance.Lease({}, {fromBlock:this.state.currentBlock, toBlock: 'latest'})
+     };
+
+    let events = at[_event];
+    events.watch((err: any, event: any) => {
+        if (err) {
+            console.log(err)
+        }
+        else {
+          this.reload()
         }
     })
   })
@@ -228,7 +271,7 @@ class App extends Component {
     var price = this.state.price
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.state.photoMarket.deployed().then((instance) => {
-      this.eventWatcher()
+      this.eventWatcherMarket("Sale")
       console.log(this.state.tokenId,price)
       return instance.buyPhoto(this.state.tokenId,{from: accounts[0], value:price*1e18,gas:2000000})
       })
@@ -241,7 +284,7 @@ class App extends Component {
     var price = this.state.price
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.state.photoMarket.deployed().then((instance) => {
-      this.eventWatcher()
+      this.eventWatcherMarket("OrderPlaced")
       return instance.listPhoto(this.state.tokenId,price * 1e18,{from: accounts[0],gas:2000000})
       })
     })
@@ -251,7 +294,7 @@ class App extends Component {
     this.state.photoMarket.setProvider(this.state.web3.currentProvider)
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.state.photoMarket.deployed().then((instance) => {
-        this.eventWatcher()
+        this.eventWatcherMarket("OrderRemoved")
       return instance.unlistPhoto(this.state.tokenId ,{from: accounts[0],gas:2000000})
       })
     })
@@ -261,7 +304,7 @@ class App extends Component {
     var price = this.state.price
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.state.photoMarket.deployed().then((instance) => {
-      this.eventWatcher()
+      this.eventWatcherMarket("Lease")
       return instance.buyLease(this.state.tokenId,{value:price * 1e18,from: accounts[0],gas:2000000})
       })
     })
@@ -272,7 +315,7 @@ class App extends Component {
     var price = this.state.price
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.state.photoMarket.deployed().then((instance) => {
-      this.eventWatcher()
+      this.eventWatcherMarket("LeaseOrderPlaced")
       return instance.listLease(this.state.tokenId,price * 1e18,{from: accounts[0],gas:2000000})
       })
     })
@@ -282,7 +325,7 @@ class App extends Component {
     this.state.photoMarket.setProvider(this.state.web3.currentProvider)
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.state.photoMarket.deployed().then((instance) => {
-        this.eventWatcher()
+        this.eventWatcherMarket("LeaseOrderRemoved")
       return instance.unlistLease(this.state.tokenId ,{from: accounts[0],gas:2000000})
       })
     })
@@ -292,7 +335,6 @@ class App extends Component {
     this.state.auction.setProvider(this.state.web3.currentProvider)
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.state.auction.deployed().then((instance) => {
-        this.eventWatcher()
       return instance.setAuction(this.state.duration * 86400,this.state.tokenId, {from: accounts[0],gas:2000000})
       })
     })
@@ -303,7 +345,7 @@ class App extends Component {
     this.state.photoCore.setProvider(this.state.web3.currentProvider)
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.state.photoCore.deployed().then((instance) => {
-      this.eventWatcher()
+      this.eventWatcherCore("Upload")
       instance.allowUploads.call().then((result) =>{
         console.log(result);
       })
@@ -320,16 +362,17 @@ class App extends Component {
     var price = this.state.price
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.state.auction.deployed().then((instance) => {
-        this.eventWatcher()
+        this.eventWatcherAuction("HighestBidIncreased")
       return instance.bid(this.state.tokenId, {value:price * 1e18,from: accounts[0],gas:2000000})
       })
     })
   }
+
   closeAuction(){
     this.state.auction.setProvider(this.state.web3.currentProvider)
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.state.auction.deployed().then((instance) => {
-        this.eventWatcher()
+        this.eventWatcherAuction("AuctionEnded")
       return instance.endAuction(this.state.tokenId,{from: accounts[0],gas:2000000})
       })
     })
