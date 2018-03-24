@@ -304,7 +304,14 @@ class App extends Component {
     this.state.web3.eth.getAccounts((error, accounts) => {
       this.state.photoCore.deployed().then((instance) => {
       this.eventWatcher()
-      return instance.uploadPhoto(this.state.web3.sha3(this.state.photoHash),this.state.name,this.state.photographer,this.state.isenNumber,this.state.photoOwner,{from: accounts[0]})
+      instance.allowUploads.call().then((result) =>{
+        console.log(result);
+      })
+      console.log(this.state.web3.sha3("Doge.jpeg"),"Doge","Anon",0,"0x0d7EFfEFdB084DfEB1621348c8C70cc4e871Eba4")
+      console.log(this.state.web3.sha3(this.state.photoHash),this.state.name,this.state.photographer,this.state.isenNumber,this.state.photoOwner)
+      return instance.uploadPhoto(this.state.web3.sha3("Doge.jpeg"),"Doge","Anon",0,"0x0d7EFfEFdB084DfEB1621348c8C70cc4e871Eba4",{from: accounts[0]})
+     
+      //return instance.uploadPhoto(this.state.web3.sha3(this.state.photoHash),this.state.name,this.state.photographer,this.state.isenNumber,this.state.photoOwner,{from: accounts[0]})
       })
     })
   }

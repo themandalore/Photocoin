@@ -22,7 +22,7 @@ contract('Contracts', function(accounts) {
 			await core.setWhitelist(accounts[i],true);
 		}
    })
-	it('Setup contract for testing', async function () {
+	/*it('Setup contract for testing', async function () {
   	assert.equal(await core.marketContract.call(),market.address,"Market contract should be set properly");
 	});
 	it('Interfaces Supported', async function () {
@@ -147,13 +147,21 @@ contract('Contracts', function(accounts) {
 	  	assert(balance == balance2 - 2, "Account 0 should be sent 5 ether");
 	});
 	it('UnLease Photos', async function () {
-		await core.uploadPhoto(web3.sha3("Doge.jpeg"),"Doge","Anon",0,accounts[4]);
+		await core.setAllowUploads();
+		await core.uploadPhoto(web3.sha3("Doge.jpeg"),"Doge","Anon",0,accounts[4],{from:accounts[4]});
 		await market.listLease(0,web3.toWei(1, 'ether'),{from:accounts[4]});
 		Order = await market.getLeases(0);
 		assert.equal(Order[1],web3.toWei(1, 'ether'),"Lease order should still be on book");
 		await market.unlistLease(0,{from:accounts[4]});
 		Order = await market.getLeases(0);
 		assert.equal(Order[1],0,"Lease order should not still be on book");
+	});*/
+		it('Allow uploads of Photos', async function () {
+		console.log(await core.allowUploads.call());
+		await core.setAllowUploads();
+		console.log(await core.allowUploads.call());
+		assert.equal(await core.allowUploads.call(),true,"everyone should be allowed to upload")
+		await core.uploadPhoto(web3.sha3("Doge.jpeg"),"Doge","Anon",0,accounts[4],{from:accounts[4]});
 	});
 
 });

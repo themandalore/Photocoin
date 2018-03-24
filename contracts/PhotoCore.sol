@@ -10,7 +10,6 @@ contract PhotoCore is PhotoBase{
     // @notice Name and symbol of the non fungible token
     string public name = "PhotoCoin";
     string public symbol = "PC";
-    bool public allowUploads;
 
     /**
     *@dev Creates the main Photocoin smart contract instance and sets the owner
@@ -47,7 +46,7 @@ contract PhotoCore is PhotoBase{
         if(_owner == address(0)) {
             _owner = owner;
         }
-        require (allowUploads || msg.sender == owner);
+        require (allowUploads == true || msg.sender == owner);
         uint256 newId = totalTokens;
         photos[newId] = Photo({
             name: _name,

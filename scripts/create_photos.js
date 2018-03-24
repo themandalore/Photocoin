@@ -14,6 +14,7 @@ module.exports =async function(accounts) {
 	await core.setMarket(market.address);
 	await core.setAuction(auction.address);
 	await auction.setToken(core.address);
+	await core.setAllowUploads();
 	await core.setWhitelist(market.address,true);
 	await core.setWhitelist(auction.address,true);
 	await core.setWhitelist(myAddress1,true);

@@ -163,15 +163,6 @@ contract testAuction {
     }
 
     /**
-    *@dev allows parties to query if an auction has ended
-    *@param _token the unique tokenId
-    */
-    function getEnded(uint _token) public constant returns(bool){
-        Details memory _auction = auctions[auctionIndex[_token]];
-        return _auction.ended;
-    }
-
-    /**
     *@dev allows parties to query how many auctions are ongoing
     *@param _token the unique tokenId
     */

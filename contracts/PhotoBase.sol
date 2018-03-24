@@ -11,6 +11,7 @@ contract PhotoBase is ERC721{
     address public owner; //The owner of the contract
     address public marketContract; //The addresss of the official marketplace contract
     address public auctionContract; //The addresss of the official auction contract
+    bool public allowUploads;
 
     /*** DATA TYPES ***/
     /// @dev The main Photo struct
@@ -108,7 +109,13 @@ contract PhotoBase is ERC721{
    * @param _tokenId the numeric identifier of a token
   */
   function transferFrom(address _from, address _to, uint256 _tokenId)  public{
-    require(msg.sender == owner || isApproved(msg.sender,_from) || isApproved(msg.sender,_from,_tokenId) || ownerOf(_tokenId)==msg.sender || msg.sender==marketContract || msg.sender==auctionContract);
+    require((_from == address(0) && allowUploads) ||
+        (msg.sender == owner && _from == address(0)) ||
+         isApproved(msg.sender,_from) ||
+          isApproved(msg.sender,_from,_tokenId) ||
+           ownerOf(_tokenId)==msg.sender ||
+            msg.sender==marketContract ||
+             msg.sender==auctionContract);
     require(!whitelistOn || whitelist[_to] == true);
     clearApprovalAndTransfer(_from,_to,_tokenId);
   }
