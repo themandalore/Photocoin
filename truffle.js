@@ -1,7 +1,7 @@
 var HDWalletProvider = require("truffle-hdwallet-provider");
 var DefaultBuilder = require("truffle-default-builder");
 
-var mnemonic = "document crisp glide lava weasel tiger debate wasp chair remain ritual rubber";
+var mnemonic = "document";
 
 module.exports = {
    /*build: new DefaultBuilder({
@@ -13,6 +13,12 @@ module.exports = {
       "app.css"
     ]
   }),*/
+  solc: {
+    optimizer: {
+      enabled: true,
+      runs: 200
+    }
+  },
   networks: {
     development: {
       host: "localhost",
@@ -21,10 +27,12 @@ module.exports = {
       gasPrice: 1 // Specified in Wei
     },
     ropsten: {
-      provider: new HDWalletProvider(mnemonic, "https://ropsten.infura.io"),
-      network_id: 3,
-      gas: 4612388,
-      gasPrice: 50000000000 // Specified in Wei
+      provider: function() {
+        return new HDWalletProvider(mnemonic, "https://ropsten.infura.io/HFP6nfe8YSNUiqIf9xbj")
+      },
+      gas: 4600000,
+      gasPrice: 50000000000,
+      network_id: 3
     }
   }
 };

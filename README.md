@@ -309,9 +309,10 @@ Additional mappings enable us to look at details
 
 In one terminal:
 ```
-ganache-cli -m document crisp glide lava weasel tiger debate wasp chair remain ritual rubber
+ganache-cli -m document
 
 //Note if you don't use the specific mnemonic, you will need to change the account[0] variable in the create_photos.js script.
+Creator Private key - 5838675896e9edc7493ab081bdac45900fb2500b7837ab7ba1ea16cf476ac89c (please don't use on mainnet...for obvious reasons)
 ```
 
 

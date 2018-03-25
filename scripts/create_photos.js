@@ -23,6 +23,6 @@ module.exports =async function(accounts) {
 	await core.uploadPhoto(web3.sha3("Prettygirls.jpeg"),"Pretty girls","Nick",1,myAddress1);
 	await core.uploadPhoto(web3.sha3("MonaLisa.jpeg"),"Mona Lisa","Leo",2,myAddress1);
   	console.log(myAddress1);
-  	await web3.eth.sendTransaction({from:account0,to:myAddress1, value:web3.toWei(10, "ether")});
-  	await web3.eth.sendTransaction({from:account0, to:myAddress2, value:web3.toWei(10, "ether")});
+  	//await web3.eth.sendTransaction({from:account0,to:myAddress1, value:web3.toWei(10, "ether")});
+  	//await web3.eth.sendTransaction({from:account0, to:myAddress2, value:web3.toWei(10, "ether")});
 }
