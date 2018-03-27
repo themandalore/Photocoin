@@ -152,7 +152,7 @@ class App extends Component {
                 var i = currentComponent.state.owner;
                 var j =currentComponent.state.storageValue;
                 if(i === j){
-                    currentComponent.setState({auctionButton :(<p><button onClick={this.setAuction.bind(this)}>List for Auction</button></p>)});
+                    currentComponent.setState({auctionButton :(<p><button onClick={currentComponent.setAuction.bind(this)}>List for Auction</button></p>)});
                 }
                 else{
                    currentComponent.setState({auctionButton:(<p><button disabled>List for Auction</button></p>)});
