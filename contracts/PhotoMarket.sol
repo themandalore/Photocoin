@@ -297,6 +297,7 @@ contract PhotoMarket{
             price: 0
         });
         forSale[tokenIndex] = lastToken;
+        forSaleIndex[lastToken] = tokenIndex;
         forSale.length--;
         forSaleIndex[_tokenId] = 0;
     }
@@ -314,6 +315,7 @@ contract PhotoMarket{
             price: 0
         });
         forLease[tokenIndex] = lastToken;
+        forLeaseIndex[lastToken] = tokenIndex;
         forLease.length--;
         forLeaseIndex[_tokenId] = 0;
     }

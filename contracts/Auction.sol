@@ -188,6 +188,7 @@ contract Auction {
         Details memory lastToken = auctions[auctionIndex[lastTokenIndex]];
         auctions[tokenIndex] = lastToken;
         auctions.length--;
+        auctionIndex[lastToken.tokenId] = tokenIndex;
         auctionIndex[_tokenId] = 0;
     }
 }
