@@ -2,6 +2,8 @@ pragma solidity ^0.4.18;
 
  import "./library/SafeMath.sol";
  import "./PhotoCore.sol";
+ import "./library/ERC721Receiver.sol";
+import "./library/AddressUtils.sol";
 
 /**
 *@title PhotoMarket
@@ -22,7 +24,9 @@ contract PhotoMarket{
         address maker;// the placer of the order
         uint price;// The price in wei
     }
-
+    // Equals to `bytes4(keccak256("onERC721Received(address,uint256,bytes)"))`
+  // which can be also obtained as `ERC721Receiver(0).onERC721Received.selector`
+  bytes4 constant ERC721_RECEIVED = 0xf0b9e5ba;
     //Maps a tokenId to a specific Order (owner/price)
     mapping(uint256 => Order) public orders;
     //An array of tokens for sale
@@ -281,6 +285,21 @@ contract PhotoMarket{
     function withdraw() public onlyOwner(){
         owner.transfer(this.balance);
     }
+            /**
+       * @notice Handle the receipt of an NFT
+       * @dev The ERC721 smart contract calls this function on the recipient
+       *  after a `safetransfer`. This function MAY throw to revert and reject the
+       *  transfer. This function MUST use 50,000 gas or less. Return of other
+       *  than the magic value MUST result in the transaction being reverted.
+       *  Note: the contract address is always the message sender.
+       * _from The sending address
+       * _tokenId The NFT identifier which is being transfered
+       * _data Additional data with no specified format
+       * @return `bytes4(keccak256("onERC721Received(address,uint256,bytes)"))`
+       */
+      function onERC721Received(address, uint256, bytes) external view returns(bytes4) {
+        return ERC721_RECEIVED;
+      }
 
 
     /***INTERNAL FUNCTIONS***/

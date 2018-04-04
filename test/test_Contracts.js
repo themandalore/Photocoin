@@ -164,5 +164,15 @@ contract('Contracts', function(accounts) {
 		await core.uploadPhoto(web3.sha3("Doge.jpeg"),"Doge","Anon",0,accounts[4],{from:accounts[4]});
 	});
 
+	it('Safe Transfer', async function () {
+	    await core.uploadPhoto(web3.sha3("PrettyFlowers.jpeg"),"Pretty Flowers","David",0,accounts[0]);
+	    await core.uploadPhoto(web3.sha3("PrettyFlowers.jpeg"),"Pretty Flowers","David",1,accounts[0]);;
+	    var user0Tokens = await core.tokensOf(accounts[0]);
+	    core.safeTransferFrom(accounts[0],market.address,user0Tokens[0]);
+	    core.safeTransferFrom(accounts[0],accounts[1],user0Tokens[1]);
+	    assert.equal(await core.ownerOf(user0Tokens[0]),market.address,"Market should own listed product");
+	    assert.equal(await core.ownerOf(user0Tokens[1]),accounts[1],"Account 1 should own listed product");
+   });
+
 });
 

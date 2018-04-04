@@ -1,6 +1,8 @@
 pragma solidity ^0.4.18;
 
 import "./library/SafeMath.sol";
+import "./library/ERC721Receiver.sol";
+import "./library/AddressUtils.sol";
 
 /**
  * @title ERC721Token
@@ -9,8 +11,12 @@ import "./library/SafeMath.sol";
  */
 contract ERC721 {
   using SafeMath for uint256;
+  using AddressUtils for address;
   //The total number of tokens in existence
   uint256 public totalTokens;
+      // Equals to `bytes4(keccak256("onERC721Received(address,uint256,bytes)"))`
+  // which can be also obtained as `ERC721Receiver(0).onERC721Received.selector`
+  bytes4 constant ERC721_RECEIVED = 0xf0b9e5ba;
   //A list of functions / interfaces supported by this contract
   mapping(bytes4 => bool) internal supportedInterfaces;
   //A mapping from the token ID to the owner of the token.
@@ -54,15 +60,16 @@ contract ERC721 {
         return supportedInterfaces[interfaceID];
   }
 
+  
+
   /** 
-   * @dev Transfers a specific token from one address to another
+   * @dev Transfers a specific pet from one address to another
    * @param _from is the address that the token will be sent from
    * @param _to is the address we are sending the token to
    * @param _tokenId the numeric identifier of a token
   */
   function transferFrom(address _from, address _to, uint256 _tokenId) public{
-    require(approvedFor(_tokenId)==msg.sender || isApproved(msg.sender,_from) || ownerOf(_tokenId)==msg.sender);
-    clearApprovalAndTransfer(_from,_to,_tokenId);
+    transferFrom(_from,_to,_tokenId,"");
   }
 
   /**
@@ -70,17 +77,37 @@ contract ERC721 {
   * @param _from is the address that the token will be sent from
   * @param _to is the address we are sending the token to
   * @param _tokenId the uint256 numeric identifier of a token
-  * @param data is the bytes data which will be logged with the transfer
+  * @param _data is the bytes data which will be logged with the transfer
   */
-  function transferFrom(address _from, address _to, uint256 _tokenId, bytes data) public{
+  function transferFrom(address _from, address _to, uint256 _tokenId, bytes _data) public{
     require(approvedFor(_tokenId)==msg.sender || isApproved(msg.sender,_from)|| ownerOf(_tokenId)==msg.sender);
+    require (_to != address(0));
     clearApprovalAndTransfer(_from,_to,_tokenId);
-    bytes32 log_data;
-    for (uint i = 0; i < 32; i++) {
-      log_data |= bytes32(data[i] & 0xFF) >> (i * 8);
-    }
-    log0(log_data);
   }
+
+
+  /** 
+   * @dev Transfers a specific pet from one address to another
+   * @param _from is the address that the token will be sent from
+   * @param _to is the address we are sending the token to
+   * @param _tokenId the numeric identifier of a token
+  */
+  function safeTransferFrom(address _from, address _to, uint256 _tokenId) public{
+      safeTransferFrom(_from, _to, _tokenId,"");
+  }
+
+  /**
+  * @dev This overload transferFrom function is required on ERC721.org
+  * @param _from is the address that the token will be sent from
+  * @param _to is the address we are sending the token to
+  * @param _tokenId the uint256 numeric identifier of a token
+  * @param _data is the bytes data which will be logged with the transfer
+  */
+  function safeTransferFrom(address _from, address _to, uint256 _tokenId, bytes _data) public{
+    transferFrom(_from, _to, _tokenId);
+    require(checkAndCallSafeTransfer(_from, _to, _tokenId, _data));
+  }
+
 
 
   /**
@@ -242,5 +269,46 @@ contract ERC721 {
           ] = true;
           supportedInterfaces[this.supportsInterface.selector
           ] = true;
+  }
+
+  
+    /**
+  * @dev Internal function to invoke `onERC721Received` on a target address
+  * @dev The call is not executed if the target address is not a contract
+  * @param _from address representing the previous owner of the given token ID
+  * @param _to target address that will receive the tokens
+  * @param _tokenId uint256 ID of the token to be transferred
+  * @param _data bytes optional data to send along with the call
+  * @return whether the call correctly returned the expected magic value
+  */
+  function checkAndCallSafeTransfer(
+    address _from,
+    address _to,
+    uint256 _tokenId,
+    bytes _data
+  )
+    internal
+    returns (bool)
+  {
+    if (!_to.isContract()) {
+      return true;
+    }
+    bytes4 retval = ERC721Receiver(_to).onERC721Received(_from, _tokenId, _data);
+    return (retval == ERC721_RECEIVED);
+  }
+    /**
+   * @notice Handle the receipt of an NFT
+   * @dev The ERC721 smart contract calls this function on the recipient
+   *  after a `safetransfer`. This function MAY throw to revert and reject the
+   *  transfer. This function MUST use 50,000 gas or less. Return of other
+   *  than the magic value MUST result in the transaction being reverted.
+   *  Note: the contract address is always the message sender.
+   * _from The sending address
+   * _tokenId The NFT identifier which is being transfered
+   * _data Additional data with no specified format
+   * @return `bytes4(keccak256("onERC721Received(address,uint256,bytes)"))`
+   */
+  function onERC721Received(address, uint256, bytes) public view returns(bytes4) {
+    return ERC721_RECEIVED;
   }
 }

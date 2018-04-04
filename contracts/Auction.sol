@@ -2,13 +2,17 @@ pragma solidity ^0.4.18;
 
 import "./PhotoCore.sol";
  import "./library/SafeMath.sol";
+ import "./library/ERC721Receiver.sol";
+import "./library/AddressUtils.sol";
 
 contract Auction {
     using SafeMath for uint256;
     /***VARIABLES***/
     address public owner; //owner of the contracts
     PhotoCore token; //The PhotoCore contract for linking to the Photocoin token
-
+    // Equals to `bytes4(keccak256("onERC721Received(address,uint256,bytes)"))`
+    // which can be also obtained as `ERC721Receiver(0).onERC721Received.selector`
+    bytes4 constant ERC721_RECEIVED = 0xf0b9e5ba;
 
     /// @dev The main Photo struct
     struct Details {
@@ -191,4 +195,19 @@ contract Auction {
         auctionIndex[lastToken.tokenId] = tokenIndex;
         auctionIndex[_tokenId] = 0;
     }
+            /**
+       * @notice Handle the receipt of an NFT
+       * @dev The ERC721 smart contract calls this function on the recipient
+       *  after a `safetransfer`. This function MAY throw to revert and reject the
+       *  transfer. This function MUST use 50,000 gas or less. Return of other
+       *  than the magic value MUST result in the transaction being reverted.
+       *  Note: the contract address is always the message sender.
+       * _from The sending address
+       * _tokenId The NFT identifier which is being transfered
+       * _data Additional data with no specified format
+       * @return `bytes4(keccak256("onERC721Received(address,uint256,bytes)"))`
+       */
+      function onERC721Received(address, uint256, bytes) external view returns(bytes4) {
+        return ERC721_RECEIVED;
+      }
 }
